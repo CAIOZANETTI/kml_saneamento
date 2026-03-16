@@ -6,7 +6,7 @@ Aplicação Streamlit multipage para análise de KMLs de concepção SABESP.
 import streamlit as st
 
 from modulos.carregador import configurar_sidebar_e_dados
-from modulos import diagnostico, relatorios, exportador
+from modulos import diagnostico, relatorios
 
 # ── Configuração da página ─────────────────────────────────────────
 
@@ -84,24 +84,4 @@ if not df_linear.empty and 'nm_mun' in df_linear.columns:
 else:
     st.info('Nenhum dado de município disponível.')
 
-# ── Download Excel (sidebar) ──────────────────────────────────────
-
-df_pv_export = diagnostico.verificar_espacamento_pv(df_linear)
-df_ete_export = diagnostico.verificar_capacidade_ete(df_pontual, df_linear)
-df_decliv_export = None
-if 'df_linear_elev' in st.session_state:
-    df_decliv_export = diagnostico.analisar_trechos_esgoto(st.session_state['df_linear_elev'])
-
-excel_bytes = exportador.exportar_excel(
-    df_linear, df_pontual, df_areas,
-    df_declividade=df_decliv_export,
-    df_pv=df_pv_export,
-    df_ete_verif=df_ete_export,
-)
-
-st.sidebar.download_button(
-    label='Baixar Excel',
-    data=excel_bytes,
-    file_name='diagnostico_saneamento.xlsx',
-    mime='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-)
+# Nota: Downloads (Excel, Memorial HTML) disponíveis na página "Downloads"
