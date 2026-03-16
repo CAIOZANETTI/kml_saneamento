@@ -52,15 +52,13 @@ st.markdown('### Resumo Executivo')
 resumo_txt = diagnostico.gerar_resumo_textual(df_linear, df_pontual, df_areas)
 st.info(resumo_txt)
 
-col1, col2 = st.columns(2)
-with col1:
-    r = diagnostico.resumo_extensao_por_material(df_linear)
-    if not r.empty:
-        st.plotly_chart(relatorios.grafico_extensao_por_material(r), use_container_width=True)
-with col2:
-    r = diagnostico.resumo_extensao_por_diametro(df_linear)
-    if not r.empty:
-        st.plotly_chart(relatorios.grafico_extensao_por_diametro(r), use_container_width=True)
+r = diagnostico.resumo_extensao_por_material(df_linear)
+if not r.empty:
+    st.plotly_chart(relatorios.grafico_extensao_por_material(r), use_container_width=True)
+
+r = diagnostico.resumo_extensao_por_diametro(df_linear)
+if not r.empty:
+    st.plotly_chart(relatorios.grafico_extensao_por_diametro(r), use_container_width=True)
 
 # ── Municípios afetados ────────────────────────────────────────────
 

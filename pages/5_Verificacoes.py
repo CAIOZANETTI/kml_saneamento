@@ -25,12 +25,10 @@ if not df_pv.empty:
     c3.metric('Aceitável (100-150m)', f'{aceit:,}')
     c4.metric('Excede norma (>150m)', f'{excede:,}')
 
-    col1, col2 = st.columns(2)
-    with col1:
-        r = diagnostico.resumo_espacamento_pv(df_pv)
-        st.plotly_chart(relatorios.grafico_espacamento_pv(r), use_container_width=True)
-    with col2:
-        st.plotly_chart(relatorios.grafico_histograma_extensao_trechos(df_linear), use_container_width=True)
+    r = diagnostico.resumo_espacamento_pv(df_pv)
+    st.plotly_chart(relatorios.grafico_espacamento_pv(r), use_container_width=True)
+
+    st.plotly_chart(relatorios.grafico_histograma_extensao_trechos(df_linear), use_container_width=True)
 
     st.markdown('**Trechos que excedem norma (>100m):**')
     excedidos = df_pv[df_pv['pv_status'] != 'Adequado (≤100m)']

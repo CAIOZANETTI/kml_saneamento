@@ -18,23 +18,19 @@ c3.metric('Área Total', f'{area_km2:,.1f} km²')
 n_mun_a = df_areas['nm_mun'].nunique() if not df_areas.empty and 'nm_mun' in df_areas.columns else 0
 c4.metric('Municípios', str(n_mun_a))
 
-col1, col2 = st.columns(2)
-with col1:
-    r = diagnostico.resumo_areas_por_prioridade(df_areas)
-    if not r.empty:
-        st.plotly_chart(relatorios.grafico_areas_por_prioridade(r), use_container_width=True)
-with col2:
-    r = diagnostico.resumo_areas_por_servico(df_areas)
-    if not r.empty:
-        st.plotly_chart(relatorios.grafico_areas_por_servico(r), use_container_width=True)
+r = diagnostico.resumo_areas_por_prioridade(df_areas)
+if not r.empty:
+    st.plotly_chart(relatorios.grafico_areas_por_prioridade(r), use_container_width=True)
 
-col3, col4 = st.columns(2)
-with col3:
-    r = diagnostico.resumo_areas_por_municipio(df_areas)
-    if not r.empty:
-        st.plotly_chart(relatorios.grafico_domicilios_por_municipio(r), use_container_width=True)
-with col4:
-    st.plotly_chart(relatorios.grafico_areas_por_recorte(df_areas), use_container_width=True)
+r = diagnostico.resumo_areas_por_servico(df_areas)
+if not r.empty:
+    st.plotly_chart(relatorios.grafico_areas_por_servico(r), use_container_width=True)
+
+r = diagnostico.resumo_areas_por_municipio(df_areas)
+if not r.empty:
+    st.plotly_chart(relatorios.grafico_domicilios_por_municipio(r), use_container_width=True)
+
+st.plotly_chart(relatorios.grafico_areas_por_recorte(df_areas), use_container_width=True)
 
 st.subheader('Tabela Detalhada')
 colunas_areas = ['lote', 'nm_mun', 'bairro', 'layer', 'prioridade', 'recorte',

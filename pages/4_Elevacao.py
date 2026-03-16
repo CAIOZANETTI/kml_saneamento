@@ -45,12 +45,10 @@ if 'df_linear_elev' in st.session_state:
         c3.metric('Decl. Insuficiente', f'{insuf:,}')
         c4.metric('Contra-fluxo', f'{contra:,}')
 
-        col1, col2 = st.columns(2)
-        with col1:
-            r = diagnostico.resumo_declividade(df_analise)
-            st.plotly_chart(relatorios.grafico_declividade_status(r), use_container_width=True)
-        with col2:
-            st.plotly_chart(relatorios.grafico_declividade_por_municipio(df_analise), use_container_width=True)
+        r = diagnostico.resumo_declividade(df_analise)
+        st.plotly_chart(relatorios.grafico_declividade_status(r), use_container_width=True)
+
+        st.plotly_chart(relatorios.grafico_declividade_por_municipio(df_analise), use_container_width=True)
 
         # Perfil longitudinal
         st.subheader('Perfil Longitudinal')

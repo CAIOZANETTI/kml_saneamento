@@ -14,15 +14,13 @@ r = diagnostico.resumo_extensao_por_subtipo(df_linear)
 if not r.empty:
     st.plotly_chart(relatorios.grafico_extensao_por_subtipo(r), use_container_width=True)
 
-col1, col2 = st.columns(2)
-with col1:
-    r = diagnostico.resumo_extensao_por_municipio(df_linear)
-    if not r.empty:
-        st.plotly_chart(relatorios.grafico_extensao_por_municipio(r), use_container_width=True)
-with col2:
-    r = diagnostico.resumo_extensao_por_metodo(df_linear)
-    if not r.empty:
-        st.plotly_chart(relatorios.grafico_extensao_por_metodo(r), use_container_width=True)
+r = diagnostico.resumo_extensao_por_municipio(df_linear)
+if not r.empty:
+    st.plotly_chart(relatorios.grafico_extensao_por_municipio(r), use_container_width=True)
+
+r = diagnostico.resumo_extensao_por_metodo(df_linear)
+if not r.empty:
+    st.plotly_chart(relatorios.grafico_extensao_por_metodo(r), use_container_width=True)
 
 st.subheader('Tabela Detalhada')
 colunas_exibir = ['lote', 'nm_mun', 'tipo', 'subtipo', 'material',
