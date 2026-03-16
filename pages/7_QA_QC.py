@@ -102,21 +102,43 @@ if not df_linear.empty and 'fonte' in df_linear.columns:
     ).reset_index().sort_values('extensao_total_km', ascending=False)
     por_fonte['extensao_total_km'] = por_fonte['extensao_total_km'].round(1)
 
-    col1, col2 = st.columns(2)
-    with col1:
-        st.dataframe(por_fonte, use_container_width=True)
-    with col2:
-        if len(por_fonte) > 1:
-            fig = px.pie(por_fonte, values='extensao_total_km', names='fonte', hole=0.4)
-            fig.update_traces(textinfo='label+percent', textposition='outside')
-            fig.update_layout(
-                title='Extensão por Fonte (%)',
-                font=dict(family='sans-serif', size=12),
-                margin=dict(l=20, r=20, t=40, b=20),
-                height=400,
-                plot_bgcolor='white',
-            )
-            st.plotly_chart(fig, use_container_width=True)
+    st.dataframe(por_fonte, use_container_width=True)
+
+    if len(por_fonte) > 1:
+        # Agrupar fontes pequenas (< 2% do total) em "Outros"
+        total_km = por_fonte['extensao_total_km'].sum()
+        limite = total_km * 0.02
+        grandes = por_fonte[por_fonte['extensao_total_km'] >= limite].copy()
+        pequenas = por_fonte[por_fonte['extensao_total_km'] < limite]
+        if not pequenas.empty:
+            outros = pd.DataFrame({
+                'fonte': ['Outros (' + str(len(pequenas)) + ' fontes)'],
+                'qtd_trechos': [pequenas['qtd_trechos'].sum()],
+                'extensao_total_km': [pequenas['extensao_total_km'].sum()],
+            })
+            fonte_graf = pd.concat([grandes, outros], ignore_index=True)
+        else:
+            fonte_graf = grandes
+
+        fig = px.bar(
+            fonte_graf.sort_values('extensao_total_km'),
+            x='extensao_total_km', y='fonte',
+            orientation='h', text='extensao_total_km',
+        )
+        fig.update_traces(
+            texttemplate='%{text:.1f} km', textposition='outside',
+            marker_color='#1565C0',
+        )
+        fig.update_layout(
+            title='Extensão por Fonte (km)',
+            font=dict(family='sans-serif', size=12),
+            margin=dict(l=20, r=80, t=40, b=20),
+            height=max(300, len(fonte_graf) * 40 + 100),
+            plot_bgcolor='white',
+            xaxis_title='Extensão (km)',
+            yaxis_title='',
+        )
+        st.plotly_chart(fig, use_container_width=True)
 
 
 # ── Consistência de DN ────────────────────────────────────────────

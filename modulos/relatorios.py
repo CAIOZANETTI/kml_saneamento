@@ -252,19 +252,38 @@ def grafico_histograma_extensao_trechos(df: pd.DataFrame) -> go.Figure:
     if esgoto.empty:
         return go.Figure()
 
+    # Classificar trechos por faixa normativa
+    ext = esgoto['extensao_calculada_m']
+    ok = ext[ext <= 100]
+    atencao = ext[(ext > 100) & (ext <= 150)]
+    critico = ext[ext > 150]
+
+    bins = dict(start=0, end=max(500, ext.max() + 10), size=10)
+
     fig = go.Figure()
     fig.add_trace(go.Histogram(
-        x=esgoto['extensao_calculada_m'],
-        nbinsx=50,
-        marker_color=COR_ESGOTO,
-        name='Trechos',
+        x=ok, xbins=bins,
+        marker_color='#43A047', name='≤ 100m (adequado)',
+        opacity=0.85,
     ))
-    # Linhas normativas
-    fig.add_vline(x=100, line_dash='dash', line_color='orange',
-                  annotation_text='100m (sem equip.)')
-    fig.add_vline(x=150, line_dash='dash', line_color='red',
-                  annotation_text='150m (com limpeza mec.)')
-    fig.update_xaxes(title='Extensão do trecho (m)', range=[0, 500])
+    fig.add_trace(go.Histogram(
+        x=atencao, xbins=bins,
+        marker_color='#FB8C00', name='100-150m (aceitável)',
+        opacity=0.85,
+    ))
+    fig.add_trace(go.Histogram(
+        x=critico, xbins=bins,
+        marker_color='#E53935', name='> 150m (excede norma)',
+        opacity=0.85,
+    ))
+    fig.update_layout(barmode='stack')
+    fig.add_vline(x=100, line_dash='dash', line_color='#FB8C00', line_width=2,
+                  annotation_text='100m', annotation_position='top left',
+                  annotation_font_size=10)
+    fig.add_vline(x=150, line_dash='dash', line_color='#E53935', line_width=2,
+                  annotation_text='150m', annotation_position='top left',
+                  annotation_font_size=10)
+    fig.update_xaxes(title='Extensão do trecho (m)', range=[0, 500], dtick=50)
     fig.update_yaxes(title='Quantidade de trechos')
     return _aplicar_layout(fig, 'Distribuição de Extensão — Rede Coletora')
 
