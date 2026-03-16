@@ -1,14 +1,15 @@
-"""Página: Mapa Interativo"""
+"""Pagina: Mapa Interativo"""
 
 import streamlit as st
 from modulos.carregador import configurar_sidebar_e_dados
 from modulos import relatorios
 
-st.set_page_config(page_title='Mapa', page_icon='🔧', layout='wide')
+st.set_page_config(page_title='Mapa', page_icon=':material/map:', layout='wide')
 
 df_linear, df_pontual, df_areas = configurar_sidebar_e_dados()
 
-st.markdown('<h2>Mapa Interativo</h2>', unsafe_allow_html=True)
+st.header('Mapa Interativo')
+st.caption('Visualizacao geografica das redes, equipamentos e areas')
 
 tipo_mapa = st.radio(
     'Camada', ['Completo', 'Redes', 'Equipamentos'], horizontal=True)
@@ -23,9 +24,13 @@ else:
 if deck:
     st.pydeck_chart(deck)
 else:
-    st.info('Nenhum dado geográfico disponível para exibição.')
+    st.info('Nenhum dado geografico disponivel para exibicao.')
 
-st.caption(
-    'Cores: Água = azul | Esgoto = marrom | '
-    'ETE = vermelho | Reservatório = azul | Poço = verde | EEE = laranja'
-)
+# Legenda com badges
+with st.container(horizontal=True):
+    st.badge('Agua', icon=':material/water_drop:', color='blue')
+    st.badge('Esgoto', icon=':material/water:', color='orange')
+    st.badge('ETE', icon=':material/water_drop:', color='red')
+    st.badge('Reservatorio', icon=':material/water:', color='blue')
+    st.badge('Poco', icon=':material/arrow_downward:', color='green')
+    st.badge('EEE', icon=':material/bolt:', color='orange')
