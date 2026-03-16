@@ -171,9 +171,9 @@ kml_saneamento/
 ┌────────────────────────────────────────────────────────────────────┐
 │  Concepção de Saneamento — Diagnóstico de Obras                    │
 │                                                                    │
-│  ┌────────┬────────┬────────┬────────┬──────────┬──────┐            │
-│  │ Resumo │ Redes  │ Equip. │ Áreas  │ Elevação │ Mapa │            │
-│  └────────┴────────┴────────┴────────┴──────────┴──────┘            │
+│  ┌────────┬───────┬───────┬───────┬─────────┬────────────┬──────┐    │
+│  │ Resumo │ Redes │Equip. │Áreas  │Elevação │Verificações│ Mapa │    │
+│  └────────┴───────┴───────┴───────┴─────────┴────────────┴──────┘    │
 │                                                                    │
 │══════════════════════════════════════════════════════════════════   │
 │  ABA 1: RESUMO EXECUTIVO                                           │
@@ -362,7 +362,50 @@ kml_saneamento/
 │  └──────┴──────────┴────────┴──────┴──────┴────────┴──────────┘    │
 │                                                                    │
 │══════════════════════════════════════════════════════════════════   │
-│  ABA 6: MAPA                                                       │
+│  ABA 6: VERIFICAÇÕES NORMATIVAS                                    │
+│══════════════════════════════════════════════════════════════════   │
+│                                                                    │
+│  6A. Espaçamento de PV (NBR 9649)                                  │
+│  ┌───────────┐ ┌───────────┐ ┌───────────┐ ┌───────────┐          │
+│  │ 5.795     │ │ 4.951     │ │   369     │ │   475     │          │
+│  │ Trechos   │ │ ≤100m     │ │ 100-150m  │ │ >150m     │          │
+│  │ R.Coletora│ │ OK(85,4%) │ │ Atenção   │ │ ⚠ Excede │          │
+│  └───────────┘ └───────────┘ └───────────┘ └───────────┘          │
+│                                                                    │
+│  [Histograma: distribuição de extensão dos trechos]                │
+│  [Linha vermelha em 100m e 150m indicando limites normativos]      │
+│                                                                    │
+│  Tabela — Trechos que excedem norma (>100m):                       │
+│  ┌──────┬──────────┬────────┬──────┬────────┬──────────────────┐   │
+│  │Lote  │ Município│Subtipo │DN(mm)│ Ext(m) │ Status           │   │
+│  ├──────┼──────────┼────────┼──────┼────────┼──────────────────┤   │
+│  │L.21  │ Socorro  │Rd.Col. │ 150  │  245,3 │ ⚠ Limpeza mec. │   │
+│  │L.16  │ Avaré    │Rd.Col. │ 150  │  312,0 │ ❌ Excede norma  │   │
+│  └──────┴──────────┴────────┴──────┴────────┴──────────────────┘   │
+│                                                                    │
+│  ────────────────────────────────────────────────────────          │
+│                                                                    │
+│  6B. Capacidade ETE × Vazão da Rede (Manning)                      │
+│  ┌───────────┐ ┌───────────┐ ┌───────────┐                        │
+│  │  73 ETEs  │ │  XX       │ │  XX       │                        │
+│  │  Total    │ │ Compatív. │ │ ⚠ Verif. │                        │
+│  └───────────┘ └───────────┘ └───────────┘                        │
+│                                                                    │
+│  [Gráfico: Vazão ETE (proj.) vs Vazão máx. rede (Manning)]        │
+│  [Barras lado a lado por ETE — vermelho se rede > ETE]             │
+│                                                                    │
+│  Tabela — ETEs com verificação:                                    │
+│  ┌──────────┬──────────┬──────────┬──────────┬───────────────────┐ │
+│  │ Município│Vz.ETE    │DN chegada│Vz.Manning│ Status            │ │
+│  │          │proj.(L/s)│ (mm)     │máx.(L/s) │                   │ │
+│  ├──────────┼──────────┼──────────┼──────────┼───────────────────┤ │
+│  │ Luiziânia│   32,2   │ 200      │  ~35     │ ✓ Compatível     │ │
+│  │ Queiroz  │   26,7   │ 200      │  ~35     │ ✓ Compatível     │ │
+│  │ Echaporã │   50,3   │ 150      │  ~15     │ ⚠ Rede insufic. │ │
+│  └──────────┴──────────┴──────────┴──────────┴───────────────────┘ │
+│                                                                    │
+│══════════════════════════════════════════════════════════════════   │
+│  ABA 7: MAPA                                                       │
 │══════════════════════════════════════════════════════════════════   │
 │                                                                    │
 │  ┌──────────────────────────────────────────────────────────────┐  │
@@ -479,6 +522,59 @@ Para projeto executivo, utilizar levantamento topográfico."
 | 300 | 0,20% | 0,60 |
 | ≥400 | 0,15% | 0,60 |
 
+**Verificação de espaçamento de PV (Poço de Visita) — NBR 9649:**
+
+Dados revelam que 82,5% dos trechos de esgoto têm apenas 2 vértices (PV a PV).
+A extensão do trecho = distância entre PVs consecutivos.
+
+- `verificar_espacamento_pv(df_linear)` → DataFrame com coluna `pv_status`:
+  - "Adequado" se extensão ≤ 100m (sem equipamento especial)
+  - "Aceitável" se 100m < extensão ≤ 150m (requer limpeza mecânica)
+  - "Excede norma" se extensão > 150m
+- `resumo_espacamento_pv(df_analise)` → contagem e extensão por status
+- `listar_trechos_pv_excedidos(df_analise)` → tabela dos trechos > 100m
+
+**Estatísticas dos dados reais (Rede Coletora):**
+
+| Faixa | Trechos | Observação |
+|-------|---------|------------|
+| ≤ 100m | 4.951 (85,4%) | Dentro da norma |
+| 100-150m | 369 (6,4%) | Requer limpeza mecânica |
+| > 150m | 475 (8,2%) | Excede norma — verificar |
+| Mediana | 59,3m | Espaçamento típico |
+| Máximo | 2.417m | Possível erro ou trecho especial |
+
+**Verificação ETE × Vazão da Rede (capacidade hidráulica):**
+
+Cada ETE tem `vazao_projetada_l_s`. A rede de esgoto conectada (vinculada por
+`id_empreendimento` ou `nm_mun`) tem diâmetros conhecidos. Pela fórmula de Manning:
+
+  Q = (1/n) × A × R^(2/3) × S^(1/2)
+
+Onde: n = coef. rugosidade (PVC=0,013), A = área seção, R = raio hidráulico,
+S = declividade. Com a declividade do DEM, podemos estimar a vazão máxima
+do coletor chegando na ETE e verificar se a ETE está compatível.
+
+- `calcular_vazao_manning(dn_mm, material, declividade_pct)` → vazão máxima (L/s) a seção plena
+- `verificar_capacidade_ete(df_pontual, df_linear)` → DataFrame com:
+  - `vazao_ete_projetada_l_s` — capacidade da ETE
+  - `dn_chegada_mm` — maior DN da rede que chega na ETE
+  - `vazao_max_rede_l_s` — vazão máxima pelo Manning
+  - `ete_status` — "Compatível" / "ETE subdimensionada" / "Rede subdimensionada"
+
+**Vínculo ETE ↔ Rede:** via campo `id_empreendimento` (23/71 ETEs vinculadas
+diretamente). Restantes vinculáveis por `nm_mun` (município).
+
+**Vazões máximas de referência (Manning, seção plena, PVC, decliv. 0,5%):**
+
+| DN (mm) | Vazão máx. (L/s) |
+|---------|------------------|
+| 150 | ~15 |
+| 200 | ~35 |
+| 250 | ~65 |
+| 300 | ~110 |
+| 400 | ~240 |
+
 ### 4. `relatorios.py` — Gráficos Plotly
 - `grafico_extensao_por_subtipo(resumo)` → bar chart horizontal (metros)
 - `grafico_extensao_por_diametro(resumo)` → bar chart horizontal (metros)
@@ -493,6 +589,9 @@ Para projeto executivo, utilizar levantamento topográfico."
 - `grafico_perfil_longitudinal(coords, elevacoes, extensao)` → line chart com perfil do terreno
 - `grafico_declividade_status(resumo_decliv)` → pizza/bar com % adequada/insuficiente/contra-fluxo
 - `grafico_declividade_por_municipio(df_analise)` → heatmap status por município
+- `grafico_espacamento_pv(resumo_pv)` → bar chart com distribuição de espaçamento
+- `grafico_histograma_extensao_trechos(df_linear)` → histograma com faixas normativas
+- `grafico_capacidade_ete(df_verif)` → bar chart comparando vazão ETE vs vazão rede
 - `mapa_redes(df_linear)` → pydeck com LineLayer (azul/marrom por tipo)
 - `mapa_equipamentos(df_pontual)` → pydeck com ScatterplotLayer (cor por subtipo)
 - `mapa_areas(df_areas)` → pydeck com PolygonLayer (cor por prioridade)
@@ -514,7 +613,9 @@ Para projeto executivo, utilizar levantamento topográfico."
   - Aba "Áreas - Dados" — todas as áreas de expansão
   - Aba "Áreas - Por Prioridade" — pivot
   - Aba "Áreas - Por Município" — pivot domicílios
-  - Aba "Declividade Esgoto" — análise de declividade (quando elevação disponível)
+  - Aba "Verif. Declividade" — análise de declividade (quando elevação disponível)
+  - Aba "Verif. Espaçamento PV" — trechos que excedem norma NBR 9649
+  - Aba "Verif. Capacidade ETE" — cruzamento ETE × vazão rede (Manning)
 
 ---
 
@@ -563,6 +664,12 @@ requests>=2.31.0
 9. **Prazo TAC** — prazos judiciais (2025/12/31 e 2029/12/31) — alerta visual
 10. **Complexidade ambiental** — flags UC, AIA indicam restrições ambientais
 11. **Cod_prancha** — referência ao projeto executivo, exibir para rastreabilidade
+12. **Espaçamento de PV** — NBR 9649 limita a 100m (sem equip.) / 150m (com limpeza mec.).
+   844 trechos (14,6%) excedem 100m nos dados reais — alerta para o engenheiro.
+   Mediana de 59,3m é saudável, mas máx de 2.417m indica possível erro de cadastro.
+13. **Capacidade ETE × Rede** — cruzar vazão projetada da ETE com vazão máxima do
+   coletor de chegada (Manning). Vínculo via `id_empreendimento` (23 ETEs diretas)
+   ou por município. Detecta ETE subdimensionada ou rede insuficiente.
 
 ---
 
@@ -571,9 +678,9 @@ requests>=2.31.0
 1. `modulos/parser_kml.py` — parsing dos 3 schemas para DataFrames
 2. `modulos/normalizador.py` — limpeza e tipagem
 3. `modulos/elevacao.py` — consulta de elevação via API (Open-Meteo + fallback)
-4. `modulos/diagnostico.py` — cálculos, resumos e análise de declividade
+4. `modulos/diagnostico.py` — cálculos, resumos, declividade, PV, Manning
 5. `modulos/relatorios.py` — gráficos Plotly + mapas pydeck + perfil longitudinal
-6. `modulos/exportador.py` — exportação Excel multi-abas (inclui aba de declividade)
-7. `app.py` — interface Streamlit com 6 abas
+6. `modulos/exportador.py` — exportação Excel multi-abas (inclui verificações)
+7. `app.py` — interface Streamlit com 7 abas
 8. `.streamlit/config.toml` — tema
 9. `requirements.txt` — dependências
