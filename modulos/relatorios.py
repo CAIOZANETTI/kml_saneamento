@@ -359,6 +359,7 @@ def mapa_redes(df: pd.DataFrame) -> pdk.Deck:
     )
     return pdk.Deck(
         layers=[layer], initial_view_state=view,
+        map_style='mapbox://styles/mapbox/light-v11',
         tooltip={'text': '{nome}\n{extensao}'},
     )
 
@@ -400,6 +401,7 @@ def mapa_equipamentos(df: pd.DataFrame) -> pdk.Deck:
     )
     return pdk.Deck(
         layers=[layer], initial_view_state=view,
+        map_style='mapbox://styles/mapbox/light-v11',
         tooltip={'text': '{nome}\n{detalhe}'},
     )
 
@@ -467,5 +469,6 @@ def mapa_completo(df_linear: pd.DataFrame, df_pontual: pd.DataFrame,
     )
     return pdk.Deck(
         layers=layers, initial_view_state=view,
+        map_style='mapbox://styles/mapbox/light-v11',
         tooltip={'text': '{nome}\n{extensao}'},
     )
