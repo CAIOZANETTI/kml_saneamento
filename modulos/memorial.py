@@ -1,13 +1,11 @@
 """
-memorial.py — Geração de Memorial Descritivo Técnico em HTML.
+memorial.py — Geracao de Memorial Descritivo em HTML.
 
-Duas versões:
-- Leve: HTML puro com CSS inline, tabelas estilizadas, pronto para impressão/PDF
-- Detalhado: inclui gráficos Plotly interativos embutidos
+Duas versoes:
+- Gerencial: resumo executivo, KPIs, semaforos, visao macro para gerentes
+- Analitico: relatorio completo de engenharia com tabelas filtraveis e graficos Plotly
 """
 
-import io
-import base64
 from datetime import datetime
 import pandas as pd
 import numpy as np
@@ -17,10 +15,11 @@ from modulos import diagnostico
 
 # ── CSS base ──────────────────────────────────────────────────────
 
-_CSS = """
+_CSS_BASE = """
 :root {
     --azul: #1565C0;
     --azul-claro: #E3F2FD;
+    --azul-escuro: #0D47A1;
     --marrom: #5D4037;
     --verde: #2E7D32;
     --cinza-bg: #F5F5F5;
@@ -31,11 +30,7 @@ _CSS = """
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
-
-@page {
-    size: A4;
-    margin: 20mm 15mm;
-}
+@page { size: A4; margin: 20mm 15mm; }
 
 body {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -47,30 +42,27 @@ body {
     background: #fff;
 }
 
-/* Cabeçalho */
 .header {
-    background: linear-gradient(135deg, var(--azul), #0D47A1);
+    background: linear-gradient(135deg, var(--azul), var(--azul-escuro));
     color: #fff;
     padding: 30px 35px;
     margin: -20px -20px 30px -20px;
     page-break-after: avoid;
 }
-.header h1 {
-    font-size: 22px;
-    font-weight: 600;
-    margin-bottom: 4px;
-}
-.header .subtitulo {
-    font-size: 13px;
-    opacity: 0.85;
-}
-.header .meta {
-    font-size: 11px;
-    opacity: 0.7;
-    margin-top: 10px;
+.header h1 { font-size: 22px; font-weight: 600; margin-bottom: 4px; }
+.header .subtitulo { font-size: 13px; opacity: 0.85; }
+.header .meta { font-size: 11px; opacity: 0.7; margin-top: 10px; }
+.header .tipo-doc {
+    display: inline-block;
+    background: rgba(255,255,255,0.2);
+    padding: 2px 10px;
+    border-radius: 10px;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-top: 8px;
 }
 
-/* Seções */
 .secao {
     margin-bottom: 28px;
     page-break-inside: avoid;
@@ -88,13 +80,14 @@ body {
     margin: 14px 0 8px 0;
 }
 
-/* Cards de métricas */
+/* Cards */
 .cards {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
     gap: 10px;
     margin-bottom: 16px;
 }
+.cards-3 { grid-template-columns: repeat(3, 1fr); }
 .card {
     background: var(--cinza-bg);
     border-left: 3px solid var(--azul);
@@ -104,30 +97,56 @@ body {
 .card.esgoto { border-left-color: var(--marrom); }
 .card.verde { border-left-color: var(--verde); }
 .card.alerta { border-left-color: var(--laranja); }
+.card.critico { border-left-color: var(--vermelho); }
 .card .rotulo {
+    font-size: 10px; text-transform: uppercase;
+    letter-spacing: 0.5px; color: #757575; margin-bottom: 2px;
+}
+.card .valor { font-size: 18px; font-weight: 700; color: var(--cinza-texto); }
+.card .valor-grande { font-size: 26px; font-weight: 700; color: var(--azul); }
+.card .detalhe { font-size: 10px; color: #9E9E9E; margin-top: 2px; }
+
+/* Tabelas com filtro */
+.tabela-container {
+    margin-bottom: 16px;
+    overflow-x: auto;
+}
+.filtro-row {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 6px;
+    flex-wrap: wrap;
+}
+.filtro-row input {
+    flex: 1;
+    min-width: 80px;
+    padding: 5px 8px;
+    border: 1px solid var(--cinza-borda);
+    border-radius: 4px;
     font-size: 10px;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    color: #757575;
-    margin-bottom: 2px;
-}
-.card .valor {
-    font-size: 18px;
-    font-weight: 700;
     color: var(--cinza-texto);
+    background: var(--cinza-bg);
+    outline: none;
+    transition: border-color 0.2s;
 }
-.card .detalhe {
+.filtro-row input:focus {
+    border-color: var(--azul);
+    background: #fff;
+}
+.filtro-row input::placeholder {
+    color: #BDBDBD;
+    font-style: italic;
+}
+.contador-filtro {
     font-size: 10px;
     color: #9E9E9E;
-    margin-top: 2px;
+    margin-top: 4px;
 }
 
-/* Tabelas */
 table {
     width: 100%;
     border-collapse: collapse;
     font-size: 11px;
-    margin-bottom: 14px;
 }
 th {
     background: var(--azul);
@@ -138,66 +157,163 @@ th {
     font-size: 10px;
     text-transform: uppercase;
     letter-spacing: 0.3px;
+    position: sticky;
+    top: 0;
 }
-td {
-    padding: 6px 10px;
-    border-bottom: 1px solid var(--cinza-borda);
-}
+td { padding: 6px 10px; border-bottom: 1px solid var(--cinza-borda); }
 tr:nth-child(even) td { background: var(--cinza-bg); }
 tr:hover td { background: var(--azul-claro); }
-td.num { text-align: right; font-variant-numeric: tabular-nums; }
 
-/* Status badges */
+/* Badges */
 .badge {
-    display: inline-block;
-    padding: 2px 8px;
-    border-radius: 10px;
-    font-size: 10px;
-    font-weight: 600;
+    display: inline-block; padding: 2px 8px;
+    border-radius: 10px; font-size: 10px; font-weight: 600;
 }
 .badge.ok { background: #E8F5E9; color: var(--verde); }
 .badge.atencao { background: #FFF3E0; color: var(--laranja); }
 .badge.critico { background: #FFEBEE; color: var(--vermelho); }
 
-/* Texto descritivo */
 .descritivo {
-    font-size: 12px;
-    color: #616161;
-    margin-bottom: 12px;
-    line-height: 1.7;
+    font-size: 12px; color: #616161;
+    margin-bottom: 12px; line-height: 1.7;
 }
 
-/* Rodapé */
-.footer {
-    margin-top: 40px;
-    padding-top: 16px;
-    border-top: 1px solid var(--cinza-borda);
-    font-size: 10px;
-    color: #9E9E9E;
-    text-align: center;
-    page-break-before: avoid;
+/* Semáforo gerencial */
+.semaforo { display: flex; gap: 12px; margin: 14px 0; }
+.semaforo-item {
+    flex: 1; padding: 14px;
+    border-radius: 6px; text-align: center;
+}
+.semaforo-item.verde-bg { background: #E8F5E9; border: 1px solid #A5D6A7; }
+.semaforo-item.amarelo-bg { background: #FFF8E1; border: 1px solid #FFE082; }
+.semaforo-item.vermelho-bg { background: #FFEBEE; border: 1px solid #EF9A9A; }
+.semaforo-item .num { font-size: 22px; font-weight: 700; }
+.semaforo-item .label { font-size: 10px; text-transform: uppercase; color: #616161; }
+
+/* Barra de progresso */
+.progress-bar {
+    height: 20px; border-radius: 10px; overflow: hidden;
+    display: flex; margin: 8px 0 16px 0; background: var(--cinza-bg);
+}
+.progress-bar .seg {
+    height: 100%; display: flex; align-items: center;
+    justify-content: center; font-size: 9px; font-weight: 600; color: #fff;
+}
+.progress-bar .seg-verde { background: var(--verde); }
+.progress-bar .seg-amarelo { background: var(--laranja); color: #333; }
+.progress-bar .seg-vermelho { background: var(--vermelho); }
+
+/* Destaques */
+.destaque {
+    background: var(--azul-claro); border-left: 4px solid var(--azul);
+    padding: 14px 18px; margin: 14px 0;
+    border-radius: 0 6px 6px 0; font-size: 12px;
+}
+.destaque strong { color: var(--azul); }
+.conclusao {
+    background: #F3E5F5; border-left: 4px solid #7B1FA2;
+    padding: 14px 18px; margin: 14px 0;
+    border-radius: 0 6px 6px 0; font-size: 12px;
 }
 
-/* Plotly container */
-.plotly-container {
-    margin: 12px 0;
+/* Graficos empilhados */
+.grafico-bloco {
+    width: 100%;
+    margin: 0 0 24px 0;
     page-break-inside: avoid;
 }
 
-/* Print */
+.footer {
+    margin-top: 40px; padding-top: 16px;
+    border-top: 1px solid var(--cinza-borda);
+    font-size: 10px; color: #9E9E9E; text-align: center;
+    page-break-before: avoid;
+}
+
 @media print {
     body { padding: 0; max-width: none; }
     .header { margin: -20mm -15mm 20px -15mm; padding: 20px 25px; }
-    .no-print { display: none; }
-    .plotly-container { page-break-inside: avoid; }
+    .no-print, .filtro-row, .contador-filtro { display: none; }
 }
+"""
+
+# ── JS: filtro dinâmico de tabelas ────────────────────────────────
+
+_JS_FILTRO = """
+<script>
+function initFiltros() {
+    document.querySelectorAll('.tabela-container').forEach(function(container) {
+        var table = container.querySelector('table');
+        if (!table) return;
+
+        var headers = table.querySelectorAll('th');
+        var nCols = headers.length;
+        var tbody = table.querySelector('tbody');
+        var rows = tbody ? Array.from(tbody.querySelectorAll('tr')) : [];
+        var totalRows = rows.length;
+
+        // Criar linha de filtros
+        var filtroDiv = container.querySelector('.filtro-row');
+        if (!filtroDiv) {
+            filtroDiv = document.createElement('div');
+            filtroDiv.className = 'filtro-row';
+            container.insertBefore(filtroDiv, table);
+        }
+
+        // Criar contador
+        var contador = container.querySelector('.contador-filtro');
+        if (!contador) {
+            contador = document.createElement('div');
+            contador.className = 'contador-filtro';
+            container.appendChild(contador);
+        }
+        contador.textContent = totalRows + ' de ' + totalRows + ' registros';
+
+        // Criar inputs
+        for (var i = 0; i < nCols; i++) {
+            var input = document.createElement('input');
+            input.type = 'text';
+            input.placeholder = 'Filtrar ' + headers[i].textContent.trim().toLowerCase() + '...';
+            input.dataset.col = i;
+            input.addEventListener('input', filtrar);
+            filtroDiv.appendChild(input);
+        }
+
+        function filtrar() {
+            var inputs = filtroDiv.querySelectorAll('input');
+            var filtros = [];
+            inputs.forEach(function(inp) {
+                filtros.push(inp.value.toLowerCase().trim());
+            });
+
+            var visivel = 0;
+            rows.forEach(function(row) {
+                var cells = row.querySelectorAll('td');
+                var show = true;
+                for (var c = 0; c < filtros.length; c++) {
+                    if (filtros[c] && cells[c]) {
+                        var texto = cells[c].textContent.toLowerCase();
+                        if (texto.indexOf(filtros[c]) === -1) {
+                            show = false;
+                            break;
+                        }
+                    }
+                }
+                row.style.display = show ? '' : 'none';
+                if (show) visivel++;
+            });
+            contador.textContent = visivel + ' de ' + totalRows + ' registros';
+        }
+    });
+}
+document.addEventListener('DOMContentLoaded', initFiltros);
+</script>
 """
 
 
 # ── Helpers ───────────────────────────────────────────────────────
 
-def _fmt_num(valor, decimais=0):
-    """Formata número com separador de milhar."""
+def _fmt(valor, decimais=0):
     if valor is None or (isinstance(valor, float) and np.isnan(valor)):
         return '—'
     if decimais == 0:
@@ -206,7 +322,6 @@ def _fmt_num(valor, decimais=0):
 
 
 def _badge(status):
-    """Retorna HTML de badge colorido."""
     if status in ('Adequada', 'Adequado (≤100m)', 'Compatível', 'OK'):
         return f'<span class="badge ok">{status}</span>'
     if status in ('Insuficiente', 'Aceitável (100-150m)', 'Rede insuficiente', 'Atenção'):
@@ -214,24 +329,25 @@ def _badge(status):
     return f'<span class="badge critico">{status}</span>'
 
 
-def _tabela_html(df, colunas=None, fmt_colunas=None, max_linhas=50):
-    """Converte DataFrame em tabela HTML."""
+def _tabela(df, colunas=None, fmt_colunas=None, max_linhas=200):
+    """Converte DataFrame em tabela HTML com container para filtro dinâmico."""
     if df.empty:
-        return '<p class="descritivo"><em>Sem dados disponíveis.</em></p>'
-
+        return '<p class="descritivo"><em>Sem dados disponiveis.</em></p>'
     if colunas:
         cols = [c for c in colunas if c in df.columns]
         df = df[cols]
     else:
         cols = list(df.columns)
 
-    if len(df) > max_linhas:
+    total_rows = len(df)
+    if total_rows > max_linhas:
         df = df.head(max_linhas)
-        nota = f'<p class="descritivo"><em>Exibindo {max_linhas} de {len(df)} registros.</em></p>'
+        nota = f'<p class="descritivo"><em>Exibindo {max_linhas} de {total_rows} registros.</em></p>'
     else:
         nota = ''
 
-    html = '<table>\n<thead><tr>'
+    html = '<div class="tabela-container">\n'
+    html += '<table>\n<thead><tr>'
     for col in cols:
         html += f'<th>{col}</th>'
     html += '</tr></thead>\n<tbody>\n'
@@ -243,135 +359,322 @@ def _tabela_html(df, colunas=None, fmt_colunas=None, max_linhas=50):
             if fmt_colunas and col in fmt_colunas:
                 val = fmt_colunas[col](val)
             elif isinstance(val, float) and not np.isnan(val):
-                if val == int(val):
-                    val = _fmt_num(val, 0)
-                else:
-                    val = _fmt_num(val, 1)
+                val = _fmt(val, 0 if val == int(val) else 1)
             elif pd.isna(val):
                 val = '—'
             html += f'<td>{val}</td>'
         html += '</tr>\n'
 
-    html += '</tbody></table>\n' + nota
+    html += '</tbody></table>\n'
+    html += '</div>\n' + nota
     return html
 
 
-# ── Seções do memorial ────────────────────────────────────────────
+def _progress_bar(verde_pct, amarelo_pct, vermelho_pct):
+    segs = ''
+    if verde_pct > 0:
+        segs += f'<div class="seg seg-verde" style="width:{verde_pct:.1f}%">{verde_pct:.0f}%</div>'
+    if amarelo_pct > 0:
+        segs += f'<div class="seg seg-amarelo" style="width:{amarelo_pct:.1f}%">{amarelo_pct:.0f}%</div>'
+    if vermelho_pct > 0:
+        segs += f'<div class="seg seg-vermelho" style="width:{vermelho_pct:.1f}%">{vermelho_pct:.0f}%</div>'
+    return f'<div class="progress-bar">{segs}</div>'
 
-def _secao_apresentacao(df_linear, df_pontual, df_areas):
-    n_lotes = df_linear['lote'].nunique() if not df_linear.empty and 'lote' in df_linear.columns else 0
-    n_mun = df_linear['nm_mun'].nunique() if not df_linear.empty and 'nm_mun' in df_linear.columns else 0
-    lotes = ', '.join(sorted(df_linear['lote'].unique())) if not df_linear.empty and 'lote' in df_linear.columns else '—'
 
+def _footer(tipo_doc):
+    agora = datetime.now().strftime('%d/%m/%Y %H:%M')
     return f"""
-    <div class="secao">
-        <h2>1. Apresentacao</h2>
-        <p class="descritivo">
-            Este memorial apresenta o diagnostico tecnico da concepcao de obras de saneamento
-            basico para a concessao SABESP, abrangendo <strong>{n_lotes} lote(s)</strong>
-            ({lotes}) em <strong>{n_mun} municipio(s)</strong> do estado de Sao Paulo.
-        </p>
-        <p class="descritivo">
-            Os dados foram extraidos de arquivos KML contendo tres camadas de informacao:
-            redes lineares (agua e esgoto), equipamentos pontuais (ETEs, reservatorios, pocos, etc.)
-            e areas de expansao. A analise contempla extensoes, materiais, diametros,
-            verificacoes normativas (NBR 9649) e compatibilidade ETE x rede.
-        </p>
+    <div class="footer">
+        {tipo_doc} gerado automaticamente em {agora}<br>
+        Fonte: Arquivos KML de Concepcao — SABESP<br>
+        Ferramenta: Concepcao de Saneamento — Diagnostico de Obras
     </div>
     """
 
 
-def _secao_resumo(df_linear, df_pontual, df_areas):
-    ext_total = df_linear['extensao_calculada_m'].sum() if not df_linear.empty else 0
-    ext_agua = df_linear[df_linear['tipo'] == 'Água']['extensao_calculada_m'].sum() if not df_linear.empty else 0
-    ext_esgoto = df_linear[df_linear['tipo'] == 'Esgoto']['extensao_calculada_m'].sum() if not df_linear.empty else 0
-    n_equip = len(df_pontual) if not df_pontual.empty else 0
-    n_ete = len(df_pontual[df_pontual['subtipo'] == 'ETE']) if not df_pontual.empty else 0
-    n_areas = len(df_areas)
-    dom = diagnostico.total_domicilios(df_areas)
-    n_mun = df_linear['nm_mun'].nunique() if not df_linear.empty else 0
+def _dados_base(df_linear, df_pontual, df_areas):
+    d = {}
+    d['ext_total'] = df_linear['extensao_calculada_m'].sum() if not df_linear.empty else 0
+    d['ext_agua'] = df_linear[df_linear['tipo'] == 'Água']['extensao_calculada_m'].sum() if not df_linear.empty else 0
+    d['ext_esgoto'] = df_linear[df_linear['tipo'] == 'Esgoto']['extensao_calculada_m'].sum() if not df_linear.empty else 0
+    d['n_trechos'] = len(df_linear)
+    d['n_equip'] = len(df_pontual) if not df_pontual.empty else 0
+    d['n_ete'] = len(df_pontual[df_pontual['subtipo'] == 'ETE']) if not df_pontual.empty and 'subtipo' in df_pontual.columns else 0
+    d['n_eee'] = len(df_pontual[df_pontual['subtipo'] == 'EEE']) if not df_pontual.empty and 'subtipo' in df_pontual.columns else 0
+    d['n_reserv'] = len(df_pontual[df_pontual['subtipo'] == 'Reservatório']) if not df_pontual.empty and 'subtipo' in df_pontual.columns else 0
+    d['n_pocos'] = len(df_pontual[df_pontual['subtipo'] == 'Poço Profundo']) if not df_pontual.empty and 'subtipo' in df_pontual.columns else 0
+    d['n_areas'] = len(df_areas)
+    d['domicilios'] = diagnostico.total_domicilios(df_areas)
+    d['area_km2'] = diagnostico.total_area_m2(df_areas) / 1e6
+    d['n_mun'] = df_linear['nm_mun'].nunique() if not df_linear.empty and 'nm_mun' in df_linear.columns else 0
+    d['n_lotes'] = df_linear['lote'].nunique() if not df_linear.empty and 'lote' in df_linear.columns else 0
+    d['lotes'] = ', '.join(sorted(df_linear['lote'].unique())) if not df_linear.empty and 'lote' in df_linear.columns else '—'
+    d['agora'] = datetime.now().strftime('%d/%m/%Y %H:%M')
+    return d
 
-    return f"""
+
+# ══════════════════════════════════════════════════════════════════
+#  MEMORIAL GERENCIAL
+# ══════════════════════════════════════════════════════════════════
+
+def gerar_memorial_gerencial(df_linear: pd.DataFrame, df_pontual: pd.DataFrame,
+                              df_areas: pd.DataFrame) -> str:
+    """
+    Memorial gerencial: resumo executivo com KPIs, semaforos e visao macro.
+    Ideal para reunioes com gerencia — 2-3 paginas, direto ao ponto.
+    Tabelas com filtros dinamicos.
+    """
+    d = _dados_base(df_linear, df_pontual, df_areas)
+
+    # Verificações
+    df_pv = diagnostico.verificar_espacamento_pv(df_linear)
+    df_ete = diagnostico.verificar_capacidade_ete(df_pontual, df_linear)
+
+    pv_total = len(df_pv) if not df_pv.empty else 0
+    pv_ok = len(df_pv[df_pv['pv_status'] == 'Adequado (≤100m)']) if not df_pv.empty else 0
+    pv_atencao = len(df_pv[df_pv['pv_status'] == 'Aceitável (100-150m)']) if not df_pv.empty else 0
+    pv_critico = len(df_pv[df_pv['pv_status'] == 'Excede norma (>150m)']) if not df_pv.empty else 0
+    pv_pct_ok = (pv_ok / pv_total * 100) if pv_total else 100
+
+    ete_total = len(df_ete) if not df_ete.empty else 0
+    ete_compat = len(df_ete[df_ete['ete_status'] == 'Compatível']) if not df_ete.empty else 0
+
+    # Tabela por lote
+    tab_lote = ''
+    if not df_linear.empty and 'lote' in df_linear.columns:
+        lote_agg = df_linear.groupby('lote').agg(
+            municipios=('nm_mun', 'nunique'),
+            extensao_km=('extensao_calculada_m', lambda x: round(x.sum() / 1000, 1)),
+            trechos=('extensao_calculada_m', 'count'),
+        ).reset_index()
+        lote_agg.columns = ['Lote', 'Municipios', 'Extensao (km)', 'Trechos']
+        if not df_pontual.empty and 'lote' in df_pontual.columns:
+            eq_lote = df_pontual.groupby('lote').size().reset_index(name='Equipamentos')
+            eq_lote.columns = ['Lote', 'Equipamentos']
+            lote_agg = lote_agg.merge(eq_lote, on='Lote', how='left')
+            lote_agg['Equipamentos'] = lote_agg['Equipamentos'].fillna(0).astype(int)
+        tab_lote = _tabela(lote_agg)
+
+    # Top municípios
+    tab_top_mun = ''
+    if not df_linear.empty and 'nm_mun' in df_linear.columns:
+        mun = df_linear.groupby('nm_mun').agg(
+            ext_km=('extensao_calculada_m', lambda x: round(x.sum() / 1000, 1)),
+        ).reset_index().sort_values('ext_km', ascending=False).head(10)
+        mun.columns = ['Municipio', 'Extensao (km)']
+        tab_top_mun = _tabela(mun)
+
+    # Alertas PV
+    alertas_pv = ''
+    if pv_critico > 0:
+        exc = df_pv[df_pv['pv_status'] == 'Excede norma (>150m)'].groupby(
+            ['lote', 'nm_mun']).size().reset_index(name='trechos')
+        exc.columns = ['Lote', 'Municipio', 'Trechos fora da norma']
+        exc = exc.sort_values('Trechos fora da norma', ascending=False).head(10)
+        alertas_pv = f"""
+        <h3>Trechos fora da norma PV por municipio</h3>
+        <p class="descritivo">Locais com trechos de esgoto excedendo 150m entre PVs — prioridade de revisao.</p>
+        {_tabela(exc)}
+        """
+
+    # Alertas ETE
+    alertas_ete = ''
+    if not df_ete.empty and ete_total > ete_compat:
+        ete_prob = df_ete[df_ete['ete_status'] != 'Compatível'][
+            ['lote', 'nm_mun', 'nome_ete', 'vazao_ete_total_l_s', 'ete_status']].copy()
+        ete_prob.columns = ['Lote', 'Municipio', 'ETE', 'Vazao (L/s)', 'Status']
+        _tab_ete = _tabela(ete_prob, fmt_colunas={
+            'Vazao (L/s)': lambda v: _fmt(v, 1) if not pd.isna(v) else '—',
+            'Status': _badge,
+        })
+        alertas_ete = f"""
+        <h3>ETEs com atencao</h3>
+        <p class="descritivo">ETEs cuja capacidade pode ser insuficiente para a rede projetada.</p>
+        {_tab_ete}
+        """
+
+    html = f"""<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Memorial Gerencial — Concepcao de Saneamento</title>
+    <style>{_CSS_BASE}</style>
+</head>
+<body>
+    <div class="header">
+        <h1>Memorial Gerencial</h1>
+        <div class="subtitulo">Concepcao de Saneamento — Visao Executiva</div>
+        <div class="meta">Lotes: {d['lotes']} | Gerado em {d['agora']}</div>
+        <div class="tipo-doc">Documento Gerencial</div>
+    </div>
+
     <div class="secao">
-        <h2>2. Resumo Executivo</h2>
+        <h2>1. Escopo da Concepcao</h2>
+        <p class="descritivo">
+            Concepcao de obras de saneamento basico abrangendo
+            <strong>{d['n_lotes']} lote(s)</strong> ({d['lotes']}) em
+            <strong>{d['n_mun']} municipio(s)</strong> do estado de Sao Paulo — concessao SABESP.
+        </p>
+    </div>
+
+    <div class="secao">
+        <h2>2. Indicadores-Chave</h2>
         <div class="cards">
             <div class="card">
-                <div class="rotulo">Extensao Total</div>
-                <div class="valor">{_fmt_num(ext_total/1000, 1)} km</div>
-                <div class="detalhe">{_fmt_num(len(df_linear))} trechos</div>
+                <div class="rotulo">Extensao Total de Redes</div>
+                <div class="valor-grande">{_fmt(d['ext_total']/1000, 1)} km</div>
+                <div class="detalhe">{_fmt(d['n_trechos'])} trechos projetados</div>
             </div>
             <div class="card">
-                <div class="rotulo">Rede Agua</div>
-                <div class="valor">{_fmt_num(ext_agua/1000, 1)} km</div>
+                <div class="rotulo">Rede de Agua</div>
+                <div class="valor">{_fmt(d['ext_agua']/1000, 1)} km</div>
+                <div class="detalhe">{_fmt(d['ext_agua']/d['ext_total']*100 if d['ext_total'] else 0, 1)}% do total</div>
             </div>
             <div class="card esgoto">
-                <div class="rotulo">Rede Esgoto</div>
-                <div class="valor">{_fmt_num(ext_esgoto/1000, 1)} km</div>
+                <div class="rotulo">Rede de Esgoto</div>
+                <div class="valor">{_fmt(d['ext_esgoto']/1000, 1)} km</div>
+                <div class="detalhe">{_fmt(d['ext_esgoto']/d['ext_total']*100 if d['ext_total'] else 0, 1)}% do total</div>
             </div>
             <div class="card verde">
                 <div class="rotulo">Municipios</div>
-                <div class="valor">{n_mun}</div>
+                <div class="valor-grande">{d['n_mun']}</div>
             </div>
         </div>
         <div class="cards">
-            <div class="card">
-                <div class="rotulo">Equipamentos</div>
-                <div class="valor">{_fmt_num(n_equip)}</div>
-                <div class="detalhe">{n_ete} ETEs</div>
-            </div>
             <div class="card verde">
-                <div class="rotulo">Areas Expansao</div>
-                <div class="valor">{_fmt_num(n_areas)}</div>
+                <div class="rotulo">Domicilios a Atender</div>
+                <div class="valor">{_fmt(d['domicilios'])}</div>
+                <div class="detalhe">{_fmt(d['n_areas'])} areas de expansao</div>
             </div>
             <div class="card">
-                <div class="rotulo">Domicilios</div>
-                <div class="valor">{_fmt_num(dom)}</div>
-                <div class="detalhe">a atender</div>
+                <div class="rotulo">ETEs</div>
+                <div class="valor">{d['n_ete']}</div>
             </div>
             <div class="card">
-                <div class="rotulo">Area Total</div>
-                <div class="valor">{_fmt_num(diagnostico.total_area_m2(df_areas)/1e6, 1)} km2</div>
+                <div class="rotulo">Reservatorios</div>
+                <div class="valor">{d['n_reserv']}</div>
+            </div>
+            <div class="card">
+                <div class="rotulo">Area de Expansao</div>
+                <div class="valor">{_fmt(d['area_km2'], 1)} km2</div>
             </div>
         </div>
     </div>
-    """
+
+    <div class="secao">
+        <h2>3. Visao por Lote</h2>
+        {tab_lote}
+    </div>
+
+    <div class="secao">
+        <h2>4. Principais Municipios (por extensao)</h2>
+        {tab_top_mun}
+    </div>
+
+    <div class="secao">
+        <h2>5. Painel de Conformidade</h2>
+
+        <h3>Espacamento PV (NBR 9649)</h3>
+        <p class="descritivo">
+            Percentual de trechos de esgoto com espacamento entre pocos de visita adequado.
+        </p>
+        <div class="semaforo">
+            <div class="semaforo-item verde-bg">
+                <div class="num">{_fmt(pv_ok)}</div>
+                <div class="label">Adequado (≤100m)</div>
+            </div>
+            <div class="semaforo-item amarelo-bg">
+                <div class="num">{_fmt(pv_atencao)}</div>
+                <div class="label">Aceitavel (100-150m)</div>
+            </div>
+            <div class="semaforo-item vermelho-bg">
+                <div class="num">{_fmt(pv_critico)}</div>
+                <div class="label">Excede norma (&gt;150m)</div>
+            </div>
+        </div>
+        {_progress_bar(
+            pv_ok/pv_total*100 if pv_total else 100,
+            pv_atencao/pv_total*100 if pv_total else 0,
+            pv_critico/pv_total*100 if pv_total else 0,
+        )}
+
+        <h3>Capacidade ETE x Rede</h3>
+        <div class="semaforo">
+            <div class="semaforo-item verde-bg">
+                <div class="num">{_fmt(ete_compat)}</div>
+                <div class="label">Compativel</div>
+            </div>
+            <div class="semaforo-item vermelho-bg">
+                <div class="num">{_fmt(ete_total - ete_compat)}</div>
+                <div class="label">Atencao</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="secao">
+        <h2>6. Pontos de Atencao</h2>
+        {alertas_pv}
+        {alertas_ete}
+        {'<p class="descritivo"><em>Nenhum ponto critico identificado.</em></p>' if not alertas_pv and not alertas_ete else ''}
+    </div>
+
+    <div class="secao">
+        <h2>7. Sintese</h2>
+        <div class="destaque">
+            <strong>Abrangencia:</strong> {d['n_lotes']} lotes, {d['n_mun']} municipios,
+            {_fmt(d['ext_total']/1000, 1)} km de redes ({_fmt(d['ext_agua']/1000, 1)} km agua +
+            {_fmt(d['ext_esgoto']/1000, 1)} km esgoto).
+        </div>
+        <div class="destaque">
+            <strong>Infraestrutura:</strong> {_fmt(d['n_equip'])} equipamentos projetados
+            ({d['n_ete']} ETEs, {_fmt(d['n_reserv'])} reservatorios, {_fmt(d['n_eee'])} EEEs,
+            {_fmt(d['n_pocos'])} pocos).
+        </div>
+        <div class="destaque">
+            <strong>Atendimento:</strong> {_fmt(d['domicilios'])} domicilios em
+            {_fmt(d['n_areas'])} areas de expansao ({_fmt(d['area_km2'], 1)} km2).
+        </div>
+        <div class="conclusao">
+            <strong>Conformidade PV:</strong> {_fmt(pv_pct_ok, 1)}% dos trechos atendem a NBR 9649.
+            {'Situacao adequada.' if pv_pct_ok >= 90 else 'Requer revisao dos trechos excedentes.'}
+            <br>
+            <strong>Conformidade ETE:</strong> {_fmt(ete_compat)}/{_fmt(ete_total)} ETEs compativeis.
+            {'Sem alertas.' if ete_compat == ete_total else f'{ete_total - ete_compat} ETE(s) requerem atencao.'}
+        </div>
+    </div>
+
+    {_footer('Memorial Gerencial')}
+    {_JS_FILTRO}
+</body>
+</html>"""
+    return html
 
 
-def _secao_redes(df_linear):
+# ══════════════════════════════════════════════════════════════════
+#  MEMORIAL ANALÍTICO (engenharia)
+# ══════════════════════════════════════════════════════════════════
+
+def _analitico_redes(df_linear):
     if df_linear.empty:
         return ''
 
-    # Por subtipo
     r_sub = diagnostico.resumo_extensao_por_subtipo(df_linear)
-    tab_sub = _tabela_html(
-        r_sub,
-        colunas=['subtipo', 'tipo', 'extensao_m', 'qtd_trechos'],
-        fmt_colunas={'extensao_m': lambda v: _fmt_num(v, 0) + ' m'},
-    )
-
-    # Por material
     r_mat = diagnostico.resumo_extensao_por_material(df_linear)
-    tab_mat = _tabela_html(
-        r_mat,
-        colunas=['material', 'extensao_m', 'qtd_trechos'],
-        fmt_colunas={'extensao_m': lambda v: _fmt_num(v, 0) + ' m'},
-    )
-
-    # Por DN
     r_dn = diagnostico.resumo_extensao_por_diametro(df_linear)
-    tab_dn = _tabela_html(
-        r_dn,
-        colunas=['diametro_nominal_mm', 'extensao_m', 'qtd_trechos'],
-        fmt_colunas={'extensao_m': lambda v: _fmt_num(v, 0) + ' m'},
-    )
+
+    fmt_ext = {'extensao_m': lambda v: _fmt(v, 0) + ' m'}
+    tab_sub = _tabela(r_sub, colunas=['subtipo', 'tipo', 'extensao_m', 'qtd_trechos'], fmt_colunas=fmt_ext)
+    tab_mat = _tabela(r_mat, colunas=['material', 'extensao_m', 'qtd_trechos'], fmt_colunas=fmt_ext)
+    tab_dn = _tabela(r_dn, colunas=['diametro_nominal_mm', 'extensao_m', 'qtd_trechos'], fmt_colunas=fmt_ext)
 
     return f"""
     <div class="secao">
         <h2>3. Diagnostico de Redes</h2>
         <p class="descritivo">
             Levantamento das redes de distribuicao de agua e coleta de esgoto,
-            com {_fmt_num(len(df_linear))} trechos totalizando
-            {_fmt_num(df_linear['extensao_calculada_m'].sum()/1000, 1)} km de extensao.
+            com {_fmt(len(df_linear))} trechos totalizando
+            {_fmt(df_linear['extensao_calculada_m'].sum()/1000, 1)} km de extensao.
         </p>
 
         <h3>3.1 Extensao por Subtipo</h3>
@@ -386,38 +689,34 @@ def _secao_redes(df_linear):
     """
 
 
-def _secao_equipamentos(df_pontual):
+def _analitico_equipamentos(df_pontual):
     if df_pontual.empty:
         return ''
 
-    # Resumo geral
     r_equip = diagnostico.resumo_equipamentos(df_pontual)
-    tab_equip = _tabela_html(r_equip, colunas=['subtipo', 'quantidade'])
-
-    # ETEs
     r_etes = diagnostico.resumo_etes(df_pontual)
+    r_res = diagnostico.resumo_reservatorios(df_pontual)
+
     tab_etes = ''
     if not r_etes.empty:
         tab_etes = '<h3>4.2 ETEs — Estacoes de Tratamento de Esgoto</h3>\n'
-        tab_etes += _tabela_html(
+        tab_etes += _tabela(
             r_etes,
             colunas=['lote', 'nm_mun', 'nome', 'vazao_total_l_s', 'volume_total_m3'],
             fmt_colunas={
-                'vazao_total_l_s': lambda v: _fmt_num(v, 1) + ' L/s' if not pd.isna(v) else '—',
-                'volume_total_m3': lambda v: _fmt_num(v, 0) + ' m3' if not pd.isna(v) else '—',
+                'vazao_total_l_s': lambda v: _fmt(v, 1) + ' L/s' if not pd.isna(v) else '—',
+                'volume_total_m3': lambda v: _fmt(v, 0) + ' m3' if not pd.isna(v) else '—',
             },
         )
 
-    # Reservatórios
-    r_res = diagnostico.resumo_reservatorios(df_pontual)
     tab_res = ''
     if not r_res.empty:
         tab_res = '<h3>4.3 Reservatorios</h3>\n'
-        tab_res += _tabela_html(
+        tab_res += _tabela(
             r_res,
             colunas=['lote', 'nm_mun', 'nome', 'volume_total_m3'],
             fmt_colunas={
-                'volume_total_m3': lambda v: _fmt_num(v, 0) + ' m3' if not pd.isna(v) else '—',
+                'volume_total_m3': lambda v: _fmt(v, 0) + ' m3' if not pd.isna(v) else '—',
             },
         )
 
@@ -425,48 +724,35 @@ def _secao_equipamentos(df_pontual):
     <div class="secao">
         <h2>4. Equipamentos e Estruturas</h2>
         <p class="descritivo">
-            Levantamento de {_fmt_num(len(df_pontual))} equipamentos entre ETEs, EEEs,
+            Levantamento de {_fmt(len(df_pontual))} equipamentos entre ETEs, EEEs,
             reservatorios, pocos profundos e demais estruturas.
         </p>
         <h3>4.1 Resumo por Tipo</h3>
-        {tab_equip}
+        {_tabela(r_equip, colunas=['subtipo', 'quantidade'])}
         {tab_etes}
         {tab_res}
     </div>
     """
 
 
-def _secao_areas(df_areas):
+def _analitico_areas(df_areas):
     if df_areas.empty:
         return ''
 
     r_prio = diagnostico.resumo_areas_por_prioridade(df_areas)
-    tab_prio = _tabela_html(
-        r_prio,
-        colunas=['prioridade', 'quantidade', 'domicilios', 'area_total_m2'],
-        fmt_colunas={
-            'domicilios': lambda v: _fmt_num(v, 0),
-            'area_total_m2': lambda v: _fmt_num(v, 0) + ' m2',
-        },
-    )
-
     r_mun = diagnostico.resumo_areas_por_municipio(df_areas)
-    tab_mun = _tabela_html(
-        r_mun,
-        colunas=['nm_mun', 'quantidade', 'domicilios', 'area_total_m2'],
-        fmt_colunas={
-            'domicilios': lambda v: _fmt_num(v, 0),
-            'area_total_m2': lambda v: _fmt_num(v, 0) + ' m2',
-        },
-    )
+
+    fmt_area = {'domicilios': lambda v: _fmt(v, 0), 'area_total_m2': lambda v: _fmt(v, 0) + ' m2'}
+    tab_prio = _tabela(r_prio, colunas=['prioridade', 'quantidade', 'domicilios', 'area_total_m2'], fmt_colunas=fmt_area)
+    tab_mun = _tabela(r_mun, colunas=['nm_mun', 'quantidade', 'domicilios', 'area_total_m2'], fmt_colunas=fmt_area)
 
     return f"""
     <div class="secao">
         <h2>5. Areas de Expansao</h2>
         <p class="descritivo">
-            Identificadas {_fmt_num(len(df_areas))} areas de expansao com
-            {_fmt_num(diagnostico.total_domicilios(df_areas))} domicilios a atender,
-            totalizando {_fmt_num(diagnostico.total_area_m2(df_areas)/1e6, 1)} km2.
+            Identificadas {_fmt(len(df_areas))} areas de expansao com
+            {_fmt(diagnostico.total_domicilios(df_areas))} domicilios a atender,
+            totalizando {_fmt(diagnostico.total_area_m2(df_areas)/1e6, 1)} km2.
         </p>
         <h3>5.1 Por Prioridade</h3>
         {tab_prio}
@@ -476,10 +762,9 @@ def _secao_areas(df_areas):
     """
 
 
-def _secao_verificacoes(df_linear, df_pontual):
+def _analitico_verificacoes(df_linear, df_pontual):
     html = '<div class="secao"><h2>6. Verificacoes Normativas</h2>'
 
-    # PV
     df_pv = diagnostico.verificar_espacamento_pv(df_linear)
     if not df_pv.empty:
         total_pv = len(df_pv)
@@ -491,25 +776,27 @@ def _secao_verificacoes(df_linear, df_pontual):
         <h3>6.1 Espacamento de PV — NBR 9649</h3>
         <p class="descritivo">
             Verificacao do espacamento entre pocos de visita conforme NBR 9649
-            (maximo 100m sem equipamento, 150m com limpeza mecanica).
+            (maximo 100m sem equipamento mecanizado, 150m com limpeza mecanica).
         </p>
         <div class="cards">
             <div class="card">
                 <div class="rotulo">Trechos Analisados</div>
-                <div class="valor">{_fmt_num(total_pv)}</div>
+                <div class="valor">{_fmt(total_pv)}</div>
             </div>
             <div class="card verde">
                 <div class="rotulo">Adequado (≤100m)</div>
-                <div class="valor">{_fmt_num(adeq)}</div>
+                <div class="valor">{_fmt(adeq)}</div>
                 <div class="detalhe">{adeq/total_pv*100:.1f}%</div>
             </div>
             <div class="card alerta">
                 <div class="rotulo">Aceitavel (100-150m)</div>
-                <div class="valor">{_fmt_num(aceit)}</div>
+                <div class="valor">{_fmt(aceit)}</div>
+                <div class="detalhe">{aceit/total_pv*100:.1f}%</div>
             </div>
-            <div class="card" style="border-left-color: var(--vermelho);">
+            <div class="card critico">
                 <div class="rotulo">Excede Norma (&gt;150m)</div>
-                <div class="valor">{_fmt_num(excede)}</div>
+                <div class="valor">{_fmt(excede)}</div>
+                <div class="detalhe">{excede/total_pv*100:.1f}%</div>
             </div>
         </div>
         """
@@ -517,19 +804,18 @@ def _secao_verificacoes(df_linear, df_pontual):
         excedidos = df_pv[df_pv['pv_status'] != 'Adequado (≤100m)'].sort_values(
             'extensao_calculada_m', ascending=False)
         if not excedidos.empty:
-            html += '<p class="descritivo"><strong>Trechos que excedem norma:</strong></p>\n'
-            html += _tabela_html(
+            html += '<p class="descritivo"><strong>Trechos que excedem norma (detalhamento):</strong></p>\n'
+            html += _tabela(
                 excedidos,
-                colunas=['lote', 'nm_mun', 'subtipo', 'diametro_nominal_mm',
+                colunas=['lote', 'nm_mun', 'subtipo', 'material', 'diametro_nominal_mm',
                          'extensao_calculada_m', 'pv_status'],
                 fmt_colunas={
-                    'extensao_calculada_m': lambda v: _fmt_num(v, 1) + ' m',
+                    'extensao_calculada_m': lambda v: _fmt(v, 1) + ' m',
                     'pv_status': _badge,
                 },
-                max_linhas=30,
+                max_linhas=100,
             )
 
-    # ETE
     df_ete = diagnostico.verificar_capacidade_ete(df_pontual, df_linear)
     if not df_ete.empty:
         total_ete = len(df_ete)
@@ -538,31 +824,31 @@ def _secao_verificacoes(df_linear, df_pontual):
         html += f"""
         <h3>6.2 Capacidade ETE x Vazao da Rede (Manning)</h3>
         <p class="descritivo">
-            Verificacao da compatibilidade entre a capacidade da ETE e a vazao maxima
-            da rede de esgoto calculada pela formula de Manning (secao plena, declividade 0,5%).
+            Verificacao da compatibilidade entre a capacidade nominal da ETE e a vazao maxima
+            da rede de esgoto calculada pela formula de Manning (secao plena, n=0.013, declividade 0,5%).
         </p>
-        <div class="cards">
+        <div class="cards cards-3">
             <div class="card">
                 <div class="rotulo">ETEs Verificadas</div>
-                <div class="valor">{_fmt_num(total_ete)}</div>
+                <div class="valor">{_fmt(total_ete)}</div>
             </div>
             <div class="card verde">
                 <div class="rotulo">Compativeis</div>
-                <div class="valor">{_fmt_num(compat)}</div>
+                <div class="valor">{_fmt(compat)}</div>
             </div>
             <div class="card alerta">
-                <div class="rotulo">Atencao</div>
-                <div class="valor">{_fmt_num(total_ete - compat)}</div>
+                <div class="rotulo">Requerem Atencao</div>
+                <div class="valor">{_fmt(total_ete - compat)}</div>
             </div>
         </div>
         """
-        html += _tabela_html(
+        html += _tabela(
             df_ete,
             colunas=['lote', 'nm_mun', 'nome_ete', 'vazao_ete_total_l_s',
                      'dn_chegada_mm', 'vazao_manning_l_s', 'ete_status'],
             fmt_colunas={
-                'vazao_ete_total_l_s': lambda v: _fmt_num(v, 1) + ' L/s' if not pd.isna(v) else '—',
-                'vazao_manning_l_s': lambda v: _fmt_num(v, 1) + ' L/s',
+                'vazao_ete_total_l_s': lambda v: _fmt(v, 1) + ' L/s' if not pd.isna(v) else '—',
+                'vazao_manning_l_s': lambda v: _fmt(v, 1) + ' L/s',
                 'ete_status': _badge,
             },
         )
@@ -571,7 +857,7 @@ def _secao_verificacoes(df_linear, df_pontual):
     return html
 
 
-def _secao_municipios(df_linear, df_pontual):
+def _analitico_municipios(df_linear, df_pontual):
     if df_linear.empty:
         return ''
 
@@ -593,207 +879,188 @@ def _secao_municipios(df_linear, df_pontual):
     <div class="secao">
         <h2>7. Municipios Atendidos</h2>
         <p class="descritivo">
-            Relacao dos {len(mun)} municipios abrangidos pela concepcao, com extensao
-            de redes e quantidade de equipamentos.
+            Relacao dos {len(mun)} municipios abrangidos pela concepcao.
         </p>
-        {_tabela_html(mun, max_linhas=100)}
+        {_tabela(mun, max_linhas=200)}
     </div>
     """
 
 
-# ── Gráficos Plotly (versão detalhada) ────────────────────────────
-
-def _plotly_inline_js():
-    """Retorna tag script para carregar Plotly via CDN."""
-    return '<script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>\n'
-
-
-def _plotly_div(fig, div_id):
-    """Converte figura Plotly em div HTML autônomo."""
-    fig.update_layout(
-        height=350,
-        margin=dict(l=30, r=30, t=40, b=30),
-        font=dict(size=11),
-    )
-    json_data = fig.to_json()
-    return f"""
-    <div class="plotly-container">
-        <div id="{div_id}"></div>
-        <script>
-            Plotly.newPlot('{div_id}', ...JSON.parse('{json_data}').data ?
-                [JSON.parse('{json_data}')].map(d => ({{data: d.data, layout: d.layout}}))[0] :
-                JSON.parse('{json_data}'));
-        </script>
-    </div>
-    """
-
-
-def _plotly_div_safe(fig, div_id):
-    """Gera div Plotly de forma segura com escape correto."""
-    import json as _json
-    fig.update_layout(
-        height=350,
-        margin=dict(l=30, r=30, t=40, b=30),
-        font=dict(size=11),
-    )
-    fig_json = fig.to_json()
-    return f"""
-    <div class="plotly-container">
-        <div id="{div_id}" style="width:100%;"></div>
-        <script>
-            (function() {{
-                var figData = JSON.parse('{fig_json.replace(chr(39), chr(92)+chr(39))}');
-                Plotly.newPlot('{div_id}', figData.data, figData.layout, {{responsive: true}});
-            }})();
-        </script>
-    </div>
-    """
-
-
-def _secao_graficos(df_linear, df_pontual, df_areas):
-    """Seção com gráficos Plotly embutidos (versão detalhada)."""
+def _analitico_graficos(df_linear, df_pontual, df_areas):
+    """Graficos Plotly empilhados verticalmente (largura total)."""
     from modulos import relatorios
 
-    html = '<div class="secao"><h2>8. Graficos e Visualizacoes</h2>'
+    html = '<div class="secao"><h2>8. Graficos e Visualizacoes</h2>\n'
+
+    def _plotly(fig, div_id, titulo=''):
+        fig.update_layout(
+            height=400,
+            width=None,
+            margin=dict(l=40, r=40, t=50, b=40),
+            font=dict(size=11),
+        )
+        fig_json = fig.to_json().replace(chr(39), chr(92) + chr(39))
+        label = f'<h3>{titulo}</h3>\n' if titulo else ''
+        return f"""
+        {label}
+        <div class="grafico-bloco">
+            <div id="{div_id}" style="width:100%;"></div>
+            <script>
+                (function() {{
+                    var d = JSON.parse('{fig_json}');
+                    d.layout.autosize = true;
+                    Plotly.newPlot('{div_id}', d.data, d.layout, {{responsive: true}});
+                }})();
+            </script>
+        </div>
+        """
 
     # Extensão por subtipo
     r = diagnostico.resumo_extensao_por_subtipo(df_linear)
     if not r.empty:
         fig = relatorios.grafico_extensao_por_subtipo(r)
-        html += _plotly_div_safe(fig, 'graf_subtipo')
+        html += _plotly(fig, 'graf_subtipo', '8.1 Extensao por Subtipo')
 
     # Extensão por material
     r = diagnostico.resumo_extensao_por_material(df_linear)
     if not r.empty:
         fig = relatorios.grafico_extensao_por_material(r)
-        html += _plotly_div_safe(fig, 'graf_material')
+        html += _plotly(fig, 'graf_material', '8.2 Extensao por Material')
 
     # Extensão por DN
     r = diagnostico.resumo_extensao_por_diametro(df_linear)
     if not r.empty:
         fig = relatorios.grafico_extensao_por_diametro(r)
-        html += _plotly_div_safe(fig, 'graf_dn')
+        html += _plotly(fig, 'graf_dn', '8.3 Extensao por Diametro Nominal')
 
     # Extensão por município
     r = diagnostico.resumo_extensao_por_municipio(df_linear)
     if not r.empty:
         fig = relatorios.grafico_extensao_por_municipio(r)
-        html += _plotly_div_safe(fig, 'graf_mun')
+        html += _plotly(fig, 'graf_mun', '8.4 Extensao por Municipio')
 
     # Equipamentos
     r = diagnostico.resumo_equipamentos(df_pontual)
     if not r.empty:
         fig = relatorios.grafico_equipamentos_por_tipo(r)
-        html += _plotly_div_safe(fig, 'graf_equip')
+        html += _plotly(fig, 'graf_equip', '8.5 Equipamentos por Tipo')
 
     # Áreas por prioridade
     r = diagnostico.resumo_areas_por_prioridade(df_areas)
     if not r.empty:
         fig = relatorios.grafico_areas_por_prioridade(r)
-        html += _plotly_div_safe(fig, 'graf_prio')
+        html += _plotly(fig, 'graf_prio', '8.6 Areas por Prioridade')
 
-    # PV
+    # Histograma extensão trechos
     df_pv = diagnostico.verificar_espacamento_pv(df_linear)
     if not df_pv.empty:
         fig = relatorios.grafico_histograma_extensao_trechos(df_linear)
-        html += _plotly_div_safe(fig, 'graf_pv_hist')
+        html += _plotly(fig, 'graf_hist', '8.7 Distribuicao de Extensao dos Trechos')
 
-    # ETE
+    # ETE capacidade
     df_ete = diagnostico.verificar_capacidade_ete(df_pontual, df_linear)
     if not df_ete.empty:
         fig = relatorios.grafico_capacidade_ete(df_ete)
-        html += _plotly_div_safe(fig, 'graf_ete')
+        html += _plotly(fig, 'graf_ete', '8.8 Capacidade ETE x Vazao Manning')
 
     html += '</div>'
     return html
 
 
-# ── Montagem final ────────────────────────────────────────────────
-
-def _footer():
-    agora = datetime.now().strftime('%d/%m/%Y %H:%M')
-    return f"""
-    <div class="footer">
-        Memorial Descritivo gerado automaticamente em {agora}<br>
-        Fonte: Arquivos KML de Concepcao — SABESP<br>
-        Ferramenta: Concepcao de Saneamento — Diagnostico de Obras
-    </div>
-    """
-
-
-def gerar_memorial_leve(df_linear: pd.DataFrame, df_pontual: pd.DataFrame,
-                         df_areas: pd.DataFrame) -> str:
-    """
-    Gera memorial descritivo técnico em HTML puro (sem JS).
-    Leve, pronto para impressão/PDF.
-    """
-    agora = datetime.now().strftime('%d/%m/%Y %H:%M')
-    n_lotes = df_linear['lote'].nunique() if not df_linear.empty and 'lote' in df_linear.columns else 0
-    lotes = ', '.join(sorted(df_linear['lote'].unique())) if not df_linear.empty and 'lote' in df_linear.columns else ''
-
-    html = f"""<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Memorial Descritivo — Concepcao de Saneamento</title>
-    <style>{_CSS}</style>
-</head>
-<body>
-    <div class="header">
-        <h1>Memorial Descritivo Tecnico</h1>
-        <div class="subtitulo">Concepcao de Saneamento — Diagnostico de Obras</div>
-        <div class="meta">Lotes: {lotes} | Gerado em {agora}</div>
-    </div>
-
-    {_secao_apresentacao(df_linear, df_pontual, df_areas)}
-    {_secao_resumo(df_linear, df_pontual, df_areas)}
-    {_secao_redes(df_linear)}
-    {_secao_equipamentos(df_pontual)}
-    {_secao_areas(df_areas)}
-    {_secao_verificacoes(df_linear, df_pontual)}
-    {_secao_municipios(df_linear, df_pontual)}
-    {_footer()}
-</body>
-</html>"""
-    return html
-
-
-def gerar_memorial_detalhado(df_linear: pd.DataFrame, df_pontual: pd.DataFrame,
+def gerar_memorial_analitico(df_linear: pd.DataFrame, df_pontual: pd.DataFrame,
                               df_areas: pd.DataFrame) -> str:
     """
-    Gera memorial descritivo técnico com gráficos Plotly interativos.
-    Arquivo maior (~3MB), mais visual.
+    Memorial analitico: relatorio completo de engenharia com tabelas
+    filtraveis, verificacoes normativas e graficos Plotly empilhados.
     """
-    agora = datetime.now().strftime('%d/%m/%Y %H:%M')
-    n_lotes = df_linear['lote'].nunique() if not df_linear.empty and 'lote' in df_linear.columns else 0
-    lotes = ', '.join(sorted(df_linear['lote'].unique())) if not df_linear.empty and 'lote' in df_linear.columns else ''
+    d = _dados_base(df_linear, df_pontual, df_areas)
 
     html = f"""<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Memorial Descritivo Detalhado — Concepcao de Saneamento</title>
-    <style>{_CSS}</style>
-    {_plotly_inline_js()}
+    <title>Memorial Analitico — Concepcao de Saneamento</title>
+    <style>{_CSS_BASE}</style>
+    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
 </head>
 <body>
     <div class="header">
-        <h1>Memorial Descritivo Tecnico — Detalhado</h1>
-        <div class="subtitulo">Concepcao de Saneamento — Diagnostico de Obras</div>
-        <div class="meta">Lotes: {lotes} | Gerado em {agora} | Inclui graficos interativos</div>
+        <h1>Memorial Analitico de Engenharia</h1>
+        <div class="subtitulo">Concepcao de Saneamento — Relatorio Tecnico Completo</div>
+        <div class="meta">Lotes: {d['lotes']} | Gerado em {d['agora']} | Graficos interativos + filtros</div>
+        <div class="tipo-doc">Documento Analitico</div>
     </div>
 
-    {_secao_apresentacao(df_linear, df_pontual, df_areas)}
-    {_secao_resumo(df_linear, df_pontual, df_areas)}
-    {_secao_redes(df_linear)}
-    {_secao_equipamentos(df_pontual)}
-    {_secao_areas(df_areas)}
-    {_secao_verificacoes(df_linear, df_pontual)}
-    {_secao_municipios(df_linear, df_pontual)}
-    {_secao_graficos(df_linear, df_pontual, df_areas)}
-    {_footer()}
+    <div class="secao">
+        <h2>1. Apresentacao</h2>
+        <p class="descritivo">
+            Este memorial apresenta o diagnostico tecnico completo da concepcao de obras de saneamento
+            basico para a concessao SABESP, abrangendo <strong>{d['n_lotes']} lote(s)</strong>
+            ({d['lotes']}) em <strong>{d['n_mun']} municipio(s)</strong> do estado de Sao Paulo.
+        </p>
+        <p class="descritivo">
+            Os dados foram extraidos de arquivos KML contendo tres camadas: redes lineares (agua e esgoto),
+            equipamentos pontuais (ETEs, reservatorios, pocos, EEEs) e areas de expansao.
+            A analise contempla extensoes, materiais, diametros, verificacoes normativas (NBR 9649)
+            e compatibilidade ETE x rede por Manning.
+            <strong>Todas as tabelas possuem filtros dinamicos</strong> — digite nos campos acima
+            de cada coluna para filtrar.
+        </p>
+    </div>
+
+    <div class="secao">
+        <h2>2. Resumo Executivo</h2>
+        <div class="cards">
+            <div class="card">
+                <div class="rotulo">Extensao Total</div>
+                <div class="valor">{_fmt(d['ext_total']/1000, 1)} km</div>
+                <div class="detalhe">{_fmt(d['n_trechos'])} trechos</div>
+            </div>
+            <div class="card">
+                <div class="rotulo">Rede Agua</div>
+                <div class="valor">{_fmt(d['ext_agua']/1000, 1)} km</div>
+            </div>
+            <div class="card esgoto">
+                <div class="rotulo">Rede Esgoto</div>
+                <div class="valor">{_fmt(d['ext_esgoto']/1000, 1)} km</div>
+            </div>
+            <div class="card verde">
+                <div class="rotulo">Municipios</div>
+                <div class="valor">{d['n_mun']}</div>
+            </div>
+        </div>
+        <div class="cards">
+            <div class="card">
+                <div class="rotulo">Equipamentos</div>
+                <div class="valor">{_fmt(d['n_equip'])}</div>
+                <div class="detalhe">{d['n_ete']} ETEs, {_fmt(d['n_eee'])} EEEs</div>
+            </div>
+            <div class="card verde">
+                <div class="rotulo">Areas Expansao</div>
+                <div class="valor">{_fmt(d['n_areas'])}</div>
+            </div>
+            <div class="card">
+                <div class="rotulo">Domicilios</div>
+                <div class="valor">{_fmt(d['domicilios'])}</div>
+                <div class="detalhe">a atender</div>
+            </div>
+            <div class="card">
+                <div class="rotulo">Area Total</div>
+                <div class="valor">{_fmt(d['area_km2'], 1)} km2</div>
+            </div>
+        </div>
+    </div>
+
+    {_analitico_redes(df_linear)}
+    {_analitico_equipamentos(df_pontual)}
+    {_analitico_areas(df_areas)}
+    {_analitico_verificacoes(df_linear, df_pontual)}
+    {_analitico_municipios(df_linear, df_pontual)}
+    {_analitico_graficos(df_linear, df_pontual, df_areas)}
+
+    {_footer('Memorial Analitico')}
+    {_JS_FILTRO}
 </body>
 </html>"""
     return html
