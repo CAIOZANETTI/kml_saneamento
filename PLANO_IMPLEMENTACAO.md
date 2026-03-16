@@ -101,8 +101,9 @@ kml_saneamento/
 │   ├── __init__.py
 │   ├── parser_kml.py               # Parsing KML → 3 DataFrames
 │   ├── normalizador.py             # Limpeza e padronização
-│   ├── diagnostico.py              # Cálculos de engenharia e resumos
-│   ├── relatorios.py               # Gráficos Plotly
+│   ├── elevacao.py                 # Consulta elevação API (Open-Meteo/OpenTopoData)
+│   ├── diagnostico.py              # Cálculos de engenharia, declividade, resumos
+│   ├── relatorios.py               # Gráficos Plotly + perfil longitudinal
 │   └── exportador.py               # Exportação Excel multi-abas
 ├── data/
 │   └── kml/                        # KMLs de exemplo (5 lotes)
@@ -170,9 +171,9 @@ kml_saneamento/
 ┌────────────────────────────────────────────────────────────────────┐
 │  Concepção de Saneamento — Diagnóstico de Obras                    │
 │                                                                    │
-│  ┌────────┬────────────┬──────────┬──────────┬───────────────┐     │
-│  │ Resumo │ Redes      │ Equip.   │ Áreas    │ Mapa          │     │
-│  └────────┴────────────┴──────────┴──────────┴───────────────┘     │
+│  ┌────────┬────────┬────────┬────────┬──────────┬──────┐            │
+│  │ Resumo │ Redes  │ Equip. │ Áreas  │ Elevação │ Mapa │            │
+│  └────────┴────────┴────────┴────────┴──────────┴──────┘            │
 │                                                                    │
 │══════════════════════════════════════════════════════════════════   │
 │  ABA 1: RESUMO EXECUTIVO                                           │
@@ -318,7 +319,50 @@ kml_saneamento/
 │  └──────┴──────────┴────────┴──────┴──────┴────────┴────────────┘  │
 │                                                                    │
 │══════════════════════════════════════════════════════════════════   │
-│  ABA 5: MAPA                                                       │
+│  ABA 5: ELEVAÇÃO E DECLIVIDADE (Esgoto por Gravidade)              │
+│══════════════════════════════════════════════════════════════════   │
+│                                                                    │
+│  ⚠ Aviso: Elevações via DEM (resolução 90m, precisão ~4m).        │
+│  Para projeto executivo, utilizar levantamento topográfico.         │
+│                                                                    │
+│  [🔍 Consultar Elevação]  (botão — chama API sob demanda)          │
+│  [████████████████░░░░] 78% — Consultando batch 156/204...         │
+│                                                                    │
+│  Após consulta:                                                    │
+│                                                                    │
+│  ┌───────────┐ ┌───────────┐ ┌───────────┐ ┌───────────┐          │
+│  │ 6.183     │ │ 5.421     │ │   487     │ │   275     │          │
+│  │ Trechos   │ │ Adequados │ │ Decliv.   │ │ Contra-   │          │
+│  │ Esgoto    │ │ (87,7%)   │ │ Insufic.  │ │ Fluxo     │          │
+│  └───────────┘ └───────────┘ └───────────┘ └───────────┘          │
+│                                                                    │
+│  [Gráfico pizza: Status de declividade]                            │
+│                                                                    │
+│  [Gráfico: Status por município — heatmap]                         │
+│                                                                    │
+│  Perfil Longitudinal (selecione um trecho):                        │
+│  Município: [Socorro    ▼]  Trecho: [Rede Col. #1234  ▼]          │
+│  ┌──────────────────────────────────────────────────────┐          │
+│  │  ↑ Elev(m)                                          │          │
+│  │  850─┐                                              │          │
+│  │      └──┐         ┌──┐                              │          │
+│  │  840    └──┐     │  └──┐                            │          │
+│  │            └──┐  │     └──→                         │          │
+│  │  830         └──┘        DN150 PVC  Dec: 0,8%       │          │
+│  │  ──┬──┬──┬──┬──┬──┬──┬──┬──→ Distância (m)         │          │
+│  │    0  50 100 150 200 250 300 350                     │          │
+│  └──────────────────────────────────────────────────────┘          │
+│                                                                    │
+│  Tabela — Trechos com problemas (filtro: insuficiente/contra):     │
+│  ┌──────┬──────────┬────────┬──────┬──────┬────────┬──────────┐    │
+│  │Lote  │ Município│Subtipo │DN(mm)│Ext(m)│Decliv% │ Status   │    │
+│  ├──────┼──────────┼────────┼──────┼──────┼────────┼──────────┤    │
+│  │L.21  │ Socorro  │Red.Col.│ 150  │ 320  │ -0,12% │⚠ Contra │    │
+│  │L.21  │ Piracaia │Col.Trc.│ 200  │ 180  │  0,15% │⚠ Insuf. │    │
+│  └──────┴──────────┴────────┴──────┴──────┴────────┴──────────┘    │
+│                                                                    │
+│══════════════════════════════════════════════════════════════════   │
+│  ABA 6: MAPA                                                       │
 │══════════════════════════════════════════════════════════════════   │
 │                                                                    │
 │  ┌──────────────────────────────────────────────────────────────┐  │
@@ -342,6 +386,36 @@ kml_saneamento/
 ---
 
 ## Módulos — Detalhamento (funções em PT-BR)
+
+### 0. `elevacao.py` — Consulta de Elevação via API
+Inspirado no projeto [kml-earthworks](https://github.com/CAIOZANETTI/kml-earthworks/).
+Os KMLs **não possuem elevação** (apenas lon, lat). Para análise de esgoto por gravidade,
+a elevação é obtida via API externa.
+
+**APIs utilizadas:**
+- **Primária:** Open-Meteo Elevation API (Copernicus DEM GLO-90, precisão ~4m, resolução 90m)
+- **Fallback:** OpenTopoData SRTM30m (precisão ~16m, resolução 30m)
+
+**Estratégia:**
+- Batch de 100 coordenadas por request
+- Retry com backoff (0s, 0.5s) + cooldown em caso de 429
+- Fallback automático para OpenTopoData se Open-Meteo falhar
+- Cache com `@st.cache_data` para não re-consultar mesmos pontos
+- Botão explícito "Consultar Elevação" (não automático — respeita limites da API)
+
+**Limites free tier:**
+- Open-Meteo: 600/min, 5.000/h, 10.000/dia (sem chave)
+- OpenTopoData: 1/s, 1.000/dia (sem chave)
+- Nossos dados: ~390 requests (38.937 pontos) → cabe tranquilo
+
+**Funções:**
+- `consultar_elevacao_batch(coordenadas, progresso_callback)` → lista de elevações (m)
+- `consultar_open_meteo(lats, lons)` → lista de elevações
+- `consultar_opentopodata(lats, lons)` → lista de elevações (fallback)
+- `enriquecer_com_elevacao(df, col_lat, col_lon)` → df com coluna 'elevacao_m'
+
+**Aviso na interface:** "Elevações obtidas via DEM (resolução 90m, precisão ~4m).
+Para projeto executivo, utilizar levantamento topográfico."
 
 ### 1. `parser_kml.py` — Parsing dos 3 schemas
 - `carregar_kml(arquivo)` → árvore XML parseada
@@ -382,6 +456,29 @@ kml_saneamento/
 - `total_area_m2(df_areas)` → soma total
 - `gerar_resumo_textual(df_linear, df_pontual, df_areas)` → texto descritivo
 
+**Análise de Declividade (esgoto por gravidade):**
+- `calcular_declividade_trecho(elevacoes, extensao_m)` → % declividade entre montante e jusante
+- `classificar_declividade(declividade, dn_mm)` → "Adequada" / "Insuficiente" / "Contra-fluxo"
+  (baseado na NBR 9649: declividade mínima para esgoto varia com DN)
+- `analisar_trechos_esgoto(df_linear_com_elevacao)` → DataFrame com colunas:
+  - `elevacao_montante_m` — elevação do primeiro ponto do trecho
+  - `elevacao_jusante_m` — elevação do último ponto do trecho
+  - `desnivel_m` — diferença de elevação (positivo = descendo)
+  - `declividade_pct` — declividade em % (desnível / extensão × 100)
+  - `declividade_status` — classificação (Adequada/Insuficiente/Contra-fluxo)
+- `resumo_declividade(df_analise)` → contagem e extensão por status
+- `perfil_longitudinal(trecho_coords, elevacoes)` → dados para gráfico de perfil
+
+**Declividades mínimas NBR 9649 (referência):**
+
+| DN (mm) | Declividade mínima (%) | Velocidade mín. (m/s) |
+|---------|----------------------|----------------------|
+| 100-150 | 0,50% | 0,60 |
+| 200 | 0,35% | 0,60 |
+| 250 | 0,25% | 0,60 |
+| 300 | 0,20% | 0,60 |
+| ≥400 | 0,15% | 0,60 |
+
 ### 4. `relatorios.py` — Gráficos Plotly
 - `grafico_extensao_por_subtipo(resumo)` → bar chart horizontal (metros)
 - `grafico_extensao_por_diametro(resumo)` → bar chart horizontal (metros)
@@ -393,6 +490,9 @@ kml_saneamento/
 - `grafico_areas_por_servico(resumo)` → pizza
 - `grafico_areas_por_recorte(resumo)` → pizza
 - `grafico_domicilios_por_municipio(resumo, top_n=15)` → bar chart horizontal
+- `grafico_perfil_longitudinal(coords, elevacoes, extensao)` → line chart com perfil do terreno
+- `grafico_declividade_status(resumo_decliv)` → pizza/bar com % adequada/insuficiente/contra-fluxo
+- `grafico_declividade_por_municipio(df_analise)` → heatmap status por município
 - `mapa_redes(df_linear)` → pydeck com LineLayer (azul/marrom por tipo)
 - `mapa_equipamentos(df_pontual)` → pydeck com ScatterplotLayer (cor por subtipo)
 - `mapa_areas(df_areas)` → pydeck com PolygonLayer (cor por prioridade)
@@ -414,6 +514,7 @@ kml_saneamento/
   - Aba "Áreas - Dados" — todas as áreas de expansão
   - Aba "Áreas - Por Prioridade" — pivot
   - Aba "Áreas - Por Município" — pivot domicílios
+  - Aba "Declividade Esgoto" — análise de declividade (quando elevação disponível)
 
 ---
 
@@ -427,6 +528,7 @@ kml_saneamento/
 | Gráficos | Plotly Express / Plotly Graph Objects |
 | Mapa | pydeck (nativo Streamlit) |
 | Excel | openpyxl (via pandas.ExcelWriter) |
+| Elevação | requests (API Open-Meteo / OpenTopoData) |
 
 ### requirements.txt
 ```
@@ -437,6 +539,7 @@ plotly>=5.18.0
 lxml>=4.9.0
 openpyxl>=3.1.0
 pydeck>=0.8.0
+requests>=2.31.0
 ```
 
 ---
@@ -445,16 +548,21 @@ pydeck>=0.8.0
 
 1. **Extensão em metros** — todas as extensões exibidas em metros (campo `extensao_calculada_m`
    já existe nos dados), com totalizadores em km apenas nos resumos
-2. **Profundidade média** — `prof_media_m` disponível em 10,4% dos trechos, exibir quando houver
-3. **Método construtivo** — VCA predomina (99,6%), mas MND e travessias são críticos
+2. **Elevação e declividade (esgoto)** — esgoto opera por gravidade, a rede DEVE seguir
+   no sentido do declive. Elevação via API Open-Meteo (DEM 90m, ~4m precisão) permite
+   análise preliminar: identificar trechos com declividade insuficiente ou contra-fluxo
+   (referência: NBR 9649). Perfil longitudinal para visualizar trechos selecionados.
+3. **Profundidade média** — `prof_media_m` disponível em 10,4% dos trechos, combinada com
+   elevação do terreno indica a cota do coletor (cota terreno - profundidade)
+4. **Método construtivo** — VCA predomina (99,6%), mas MND e travessias são críticos
    para custo/licenciamento — destaque visual
-4. **Vazão projetada vs atual** — nos pontuais, mostrar delta para dimensionamento
-5. **Esteira SABESP** — flag que indica se o item está na esteira de execução
-6. **Estruturante** — flag que separa infraestrutura estruturante vs local
-7. **Invest_obr** — flag de investimento/obra, disponível em 50% dos registros
-8. **Prazo TAC** — prazos judiciais (2025/12/31 e 2029/12/31) — alerta visual
-9. **Complexidade ambiental** — flags UC, AIA indicam restrições ambientais
-10. **Cod_prancha** — referência ao projeto executivo, exibir para rastreabilidade
+5. **Vazão projetada vs atual** — nos pontuais, mostrar delta para dimensionamento
+6. **Esteira SABESP** — flag que indica se o item está na esteira de execução
+7. **Estruturante** — flag que separa infraestrutura estruturante vs local
+8. **Invest_obr** — flag de investimento/obra, disponível em 50% dos registros
+9. **Prazo TAC** — prazos judiciais (2025/12/31 e 2029/12/31) — alerta visual
+10. **Complexidade ambiental** — flags UC, AIA indicam restrições ambientais
+11. **Cod_prancha** — referência ao projeto executivo, exibir para rastreabilidade
 
 ---
 
@@ -462,9 +570,10 @@ pydeck>=0.8.0
 
 1. `modulos/parser_kml.py` — parsing dos 3 schemas para DataFrames
 2. `modulos/normalizador.py` — limpeza e tipagem
-3. `modulos/diagnostico.py` — cálculos e resumos
-4. `modulos/relatorios.py` — gráficos Plotly + mapas pydeck
-5. `modulos/exportador.py` — exportação Excel multi-abas
-6. `app.py` — interface Streamlit com 5 abas
-7. `.streamlit/config.toml` — tema
-8. `requirements.txt` — dependências
+3. `modulos/elevacao.py` — consulta de elevação via API (Open-Meteo + fallback)
+4. `modulos/diagnostico.py` — cálculos, resumos e análise de declividade
+5. `modulos/relatorios.py` — gráficos Plotly + mapas pydeck + perfil longitudinal
+6. `modulos/exportador.py` — exportação Excel multi-abas (inclui aba de declividade)
+7. `app.py` — interface Streamlit com 6 abas
+8. `.streamlit/config.toml` — tema
+9. `requirements.txt` — dependências
