@@ -1,0 +1,1846 @@
+{
+  "cabecalho": {
+    "empresa": "Companhia de Saneamento Básico do Estado de São Paulo - Sabesp",
+    "objeto": "PACOTE 21 - ONDA 2",
+    "contratacao": "0/00",
+    "rc": "0011583740",
+    "me": "",
+    "unidade_administrativa_contrato": "SO",
+    "data": "02/03/26",
+    "indice": "09/2025",
+    "total_folhas": 28
+  },
+  "resumo_geral": [
+    {
+      "item": "01000000",
+      "descricao": "FRENTE SERVIÇOS DE APOIO"
+    },
+    {
+      "item": "02000000",
+      "descricao": "JOANÓPOLIS"
+    },
+    {
+      "item": "03000000",
+      "descricao": "NAZARÉ PAULISTA"
+    },
+    {
+      "item": "04000000",
+      "descricao": "PEDRA BELA"
+    },
+    {
+      "item": "05000000",
+      "descricao": "PINHALZINHO"
+    },
+    {
+      "item": "06000000",
+      "descricao": "PIRACAIA"
+    },
+    {
+      "item": "07000000",
+      "descricao": "SOCORRO"
+    },
+    {
+      "item": "08000000",
+      "descricao": "VARGEM"
+    }
+  ],
+  "planilha_orcamento": [
+    {
+      "item": "01000000",
+      "descricao": "FRENTE SERVIÇOS DE APOIO"
+    },
+    {
+      "item": "01010000",
+      "descricao": "CANTEIRO"
+    },
+    {
+      "item": "01010100",
+      "descricao": "CANTEIRO"
+    },
+    {
+      "item": "01010101",
+      "descricao": "IMPLANTAÇÃO DE CANTEIRO",
+      "n_preco": "400001",
+      "unidade": "GB",
+      "quantidade": 1.0
+    },
+    {
+      "item": "01010102",
+      "descricao": "MANUTENÇÃO DE CANTEIRO",
+      "n_preco": "400002",
+      "unidade": "MES",
+      "quantidade": 28.0
+    },
+    {
+      "item": "01020000",
+      "descricao": "SERVIÇOS DE CAMPO"
+    },
+    {
+      "item": "01020100",
+      "descricao": "SERVIÇOS DE CAMPO"
+    },
+    {
+      "item": "01020101",
+      "descricao": "SERVIÇOS DE CAMPO",
+      "n_preco": "400003",
+      "unidade": "GB",
+      "quantidade": 1.0
+    },
+    {
+      "item": "01030000",
+      "descricao": "PROJETO"
+    },
+    {
+      "item": "01030100",
+      "descricao": "PROJETO"
+    },
+    {
+      "item": "01030101",
+      "descricao": "PROJETO",
+      "n_preco": "400004",
+      "unidade": "GB",
+      "quantidade": 1.0
+    },
+    {
+      "item": "01040000",
+      "descricao": "PLANO DE GESTÃO"
+    },
+    {
+      "item": "01040100",
+      "descricao": "PLANO DE GESTÃO"
+    },
+    {
+      "item": "01040101",
+      "descricao": "PLANO DE GESTÃO DA QUALIDADE",
+      "n_preco": "400005",
+      "unidade": "GB",
+      "quantidade": 1.0
+    },
+    {
+      "item": "02000000",
+      "descricao": "JOANÓPOLIS"
+    },
+    {
+      "item": "02010000",
+      "descricao": "FORMAL ESGOTO"
+    },
+    {
+      "item": "02010100",
+      "descricao": "DIGESTOR MULTIFAMILIAR"
+    },
+    {
+      "item": "02010101",
+      "descricao": "DIGESTOR MULTIFAMILIAR",
+      "n_preco": "410939",
+      "unidade": "un",
+      "quantidade": 1.0
+    },
+    {
+      "item": "02010200",
+      "descricao": "EEE"
+    },
+    {
+      "item": "02010201",
+      "descricao": "EEE ATÉ 3 CV FORN BOMBA FORM",
+      "n_preco": "400195",
+      "unidade": "un",
+      "quantidade": 3.0
+    },
+    {
+      "item": "02010202",
+      "descricao": "EEE ATÉ 3 CV FORN PAINEL FORM",
+      "n_preco": "400197",
+      "unidade": "un",
+      "quantidade": 3.0
+    },
+    {
+      "item": "02010203",
+      "descricao": "EEE ATÉ 3 CV SERVIÇOS FORM",
+      "n_preco": "400199",
+      "unidade": "un",
+      "quantidade": 3.0
+    },
+    {
+      "item": "02010300",
+      "descricao": "EMISSÁRIO"
+    },
+    {
+      "item": "02010301",
+      "descricao": "EMI PVC 150 FORN",
+      "n_preco": "400666",
+      "unidade": "M",
+      "quantidade": 333.81
+    },
+    {
+      "item": "02010302",
+      "descricao": "EMI PVC 150 VCA ATÉ 2M FORM",
+      "n_preco": "400284",
+      "unidade": "M",
+      "quantidade": 267.05
+    },
+    {
+      "item": "02010303",
+      "descricao": "EMI PVC 150 VCA DE 2 A 4M FORM",
+      "n_preco": "400285",
+      "unidade": "M",
+      "quantidade": 66.76
+    },
+    {
+      "item": "02010400",
+      "descricao": "FAIXA DE SERVIDÃO DE ESGOTO"
+    },
+    {
+      "item": "02010401",
+      "descricao": "FSE PVC 100 FORN",
+      "n_preco": "400722",
+      "unidade": "M",
+      "quantidade": 707.85
+    },
+    {
+      "item": "02010402",
+      "descricao": "FSE PVC 100 VCA ATÉ 2M",
+      "n_preco": "400724",
+      "unidade": "M",
+      "quantidade": 566.28
+    },
+    {
+      "item": "02010403",
+      "descricao": "FSE PVC 100 VCA DE 2 A 4M",
+      "n_preco": "400723",
+      "unidade": "M",
+      "quantidade": 141.57
+    },
+    {
+      "item": "02010500",
+      "descricao": "LIGAÇÕES ESGOTO"
+    },
+    {
+      "item": "02010501",
+      "descricao": "LIGAÇÃO DE ESGOTO FORM",
+      "n_preco": "411063",
+      "unidade": "un",
+      "quantidade": 244.0
+    },
+    {
+      "item": "02010600",
+      "descricao": "LINHA DE RECALQUE"
+    },
+    {
+      "item": "02010601",
+      "descricao": "LR PVCO 100 FORN",
+      "n_preco": "400677",
+      "unidade": "M",
+      "quantidade": 1808.79
+    },
+    {
+      "item": "02010602",
+      "descricao": "LR PVCO 100 VCA ATÉ 1,25M FORM",
+      "n_preco": "400357",
+      "unidade": "M",
+      "quantidade": 361.76
+    },
+    {
+      "item": "02010603",
+      "descricao": "LR PVCO 100 VCA DE 1,26 ATÉ 2M FORM",
+      "n_preco": "400359",
+      "unidade": "M",
+      "quantidade": 1447.03
+    },
+    {
+      "item": "02010700",
+      "descricao": "REDE COLETORA"
+    },
+    {
+      "item": "02010701",
+      "descricao": "RC PVC 150 FORN",
+      "n_preco": "400408",
+      "unidade": "M",
+      "quantidade": 5400.72
+    },
+    {
+      "item": "02010702",
+      "descricao": "RC PVC 150 VCA ATÉ 2M FORM",
+      "n_preco": "400412",
+      "unidade": "M",
+      "quantidade": 4320.58
+    },
+    {
+      "item": "02010703",
+      "descricao": "RC PVC 150 VCA DE 2 A 4M FORM",
+      "n_preco": "400418",
+      "unidade": "M",
+      "quantidade": 1080.14
+    },
+    {
+      "item": "02020000",
+      "descricao": "FORMAL ÁGUA"
+    },
+    {
+      "item": "02020100",
+      "descricao": "ADUTORA"
+    },
+    {
+      "item": "02020101",
+      "descricao": "AD PEAD 63 FORN",
+      "n_preco": "400060",
+      "unidade": "M",
+      "quantidade": 186.32
+    },
+    {
+      "item": "02020102",
+      "descricao": "AD PEAD 63 MND FORM",
+      "n_preco": "400061",
+      "unidade": "M",
+      "quantidade": 37.26
+    },
+    {
+      "item": "02020103",
+      "descricao": "AD PEAD 63 VCA ATÉ 1,25M FORM",
+      "n_preco": "400062",
+      "unidade": "M",
+      "quantidade": 119.24
+    },
+    {
+      "item": "02020104",
+      "descricao": "AD PEAD 63 VCA DE 1,26 ATÉ 2M FORM",
+      "n_preco": "400063",
+      "unidade": "M",
+      "quantidade": 29.81
+    },
+    {
+      "item": "02020200",
+      "descricao": "BOOSTER"
+    },
+    {
+      "item": "02020201",
+      "descricao": "BOOSTER ATÉ 4 CV FORM",
+      "n_preco": "410924",
+      "unidade": "un",
+      "quantidade": 1.0
+    },
+    {
+      "item": "02020300",
+      "descricao": "LIGAÇÕES ÁGUA"
+    },
+    {
+      "item": "02020301",
+      "descricao": "LIGAÇÃO DE ÁGUA FORM",
+      "n_preco": "411061",
+      "unidade": "un",
+      "quantidade": 209.0
+    },
+    {
+      "item": "02020400",
+      "descricao": "POÇO PROFUNDO"
+    },
+    {
+      "item": "02020401",
+      "descricao": "PP Q ATÉ 10 PERF ATÉ 150M FORM",
+      "n_preco": "400372",
+      "unidade": "un",
+      "quantidade": 1.0
+    },
+    {
+      "item": "02020402",
+      "descricao": "PP Q ATÉ 10 PERF DE 151 A 250M FORM",
+      "n_preco": "400373",
+      "unidade": "un",
+      "quantidade": 1.0
+    },
+    {
+      "item": "02020500",
+      "descricao": "REDE DE DISTRIBUIÇÃO"
+    },
+    {
+      "item": "02020501",
+      "descricao": "RD PEAD 63 FORN",
+      "n_preco": "400509",
+      "unidade": "M",
+      "quantidade": 3747.25
+    },
+    {
+      "item": "02020502",
+      "descricao": "RD PEAD 63 MND FORM",
+      "n_preco": "400510",
+      "unidade": "M",
+      "quantidade": 749.45
+    },
+    {
+      "item": "02020503",
+      "descricao": "RD PEAD 63 VCA ATÉ 1,25M FORM",
+      "n_preco": "400511",
+      "unidade": "M",
+      "quantidade": 2398.24
+    },
+    {
+      "item": "02020504",
+      "descricao": "RD PEAD 63 VCA DE 1,26 ATÉ 2M FORM",
+      "n_preco": "400512",
+      "unidade": "M",
+      "quantidade": 599.56
+    },
+    {
+      "item": "02020600",
+      "descricao": "RESERVATÓRIO"
+    },
+    {
+      "item": "02020601",
+      "descricao": "RESERVATÓRIO 50 M³ FORM",
+      "n_preco": "400569",
+      "unidade": "un",
+      "quantidade": 1.0
+    },
+    {
+      "item": "02030000",
+      "descricao": "RURAL ESGOTO"
+    },
+    {
+      "item": "02030100",
+      "descricao": "DIGESTOR MULTIFAMILIAR"
+    },
+    {
+      "item": "02030101",
+      "descricao": "DIGESTOR MULTIFAMILIAR",
+      "n_preco": "410939",
+      "unidade": "un",
+      "quantidade": 1.0
+    },
+    {
+      "item": "02030200",
+      "descricao": "EEE"
+    },
+    {
+      "item": "02030201",
+      "descricao": "EEE ATÉ 3 CV FORN BOMBA RURAL",
+      "n_preco": "400756",
+      "unidade": "un",
+      "quantidade": 3.0
+    },
+    {
+      "item": "02030202",
+      "descricao": "EEE ATÉ 3 CV FORN PAINEL RURAL",
+      "n_preco": "400757",
+      "unidade": "un",
+      "quantidade": 3.0
+    },
+    {
+      "item": "02030203",
+      "descricao": "EEE ATÉ 3 CV SERVIÇOS RURAL",
+      "n_preco": "400758",
+      "unidade": "un",
+      "quantidade": 3.0
+    },
+    {
+      "item": "02030300",
+      "descricao": "EMISSÁRIO"
+    },
+    {
+      "item": "02030301",
+      "descricao": "EMI PVC 150 FORN",
+      "n_preco": "400666",
+      "unidade": "M",
+      "quantidade": 40.33
+    },
+    {
+      "item": "02030302",
+      "descricao": "EMI PVC 150 VCA ATÉ 2M RURAL",
+      "n_preco": "400777",
+      "unidade": "M",
+      "quantidade": 32.27
+    },
+    {
+      "item": "02030303",
+      "descricao": "EMI PVC 150 VCA DE 2 A 4M RURAL",
+      "n_preco": "400778",
+      "unidade": "M",
+      "quantidade": 8.07
+    },
+    {
+      "item": "02030400",
+      "descricao": "LIGAÇÕES ESGOTO"
+    },
+    {
+      "item": "02030401",
+      "descricao": "LIGAÇÃO DE ESGOTO RURAL",
+      "n_preco": "411065",
+      "unidade": "un",
+      "quantidade": 358.0
+    },
+    {
+      "item": "02030500",
+      "descricao": "LINHA DE RECALQUE"
+    },
+    {
+      "item": "02030501",
+      "descricao": "LR PVCO 100 FORN",
+      "n_preco": "400677",
+      "unidade": "M",
+      "quantidade": 336.9
+    },
+    {
+      "item": "02030502",
+      "descricao": "LR PVCO 100 VCA ATÉ 1,25M RURAL",
+      "n_preco": "410972",
+      "unidade": "M",
+      "quantidade": 67.38
+    },
+    {
+      "item": "02030503",
+      "descricao": "LR PVCO 100 VCA DE 1,26 ATÉ 2M RURAL",
+      "n_preco": "410973",
+      "unidade": "M",
+      "quantidade": 269.52
+    },
+    {
+      "item": "02030600",
+      "descricao": "REDE COLETORA"
+    },
+    {
+      "item": "02030601",
+      "descricao": "RC PVC 150 FORN",
+      "n_preco": "400408",
+      "unidade": "M",
+      "quantidade": 1409.74
+    },
+    {
+      "item": "02030602",
+      "descricao": "RC PVC 150 VCA ATÉ 2M RURAL",
+      "n_preco": "400414",
+      "unidade": "M",
+      "quantidade": 1127.79
+    },
+    {
+      "item": "02030603",
+      "descricao": "RC PVC 150 VCA DE 2 A 4M RURAL",
+      "n_preco": "400420",
+      "unidade": "M",
+      "quantidade": 281.95
+    },
+    {
+      "item": "02030700",
+      "descricao": "SOLUÇÃO RURAL"
+    },
+    {
+      "item": "02030701",
+      "descricao": "SOL 2 A 5 DOM DIG MUL 2 A 5 C SEC E SUM",
+      "n_preco": "400966",
+      "unidade": "un",
+      "quantidade": 23.0
+    },
+    {
+      "item": "02030702",
+      "descricao": "SOL 2 A 5 DOMICILIOS SES RC",
+      "n_preco": "400968",
+      "unidade": "M",
+      "quantidade": 1789.0
+    },
+    {
+      "item": "02030703",
+      "descricao": "SOL AC 6 DOM DIG MUL 2 A 5 C SEC E SUM",
+      "n_preco": "400981",
+      "unidade": "un",
+      "quantidade": 4.0
+    },
+    {
+      "item": "02030704",
+      "descricao": "SOL AC 6 DOMICILIOS SES RC",
+      "n_preco": "400982",
+      "unidade": "M",
+      "quantidade": 1568.0
+    },
+    {
+      "item": "02030705",
+      "descricao": "SOL IND SES DIG IND CX SECA E SUMID",
+      "n_preco": "400983",
+      "unidade": "un",
+      "quantidade": 63.0
+    },
+    {
+      "item": "02040000",
+      "descricao": "RURAL ÁGUA"
+    },
+    {
+      "item": "02040100",
+      "descricao": "LIGAÇÕES ÁGUA"
+    },
+    {
+      "item": "02040101",
+      "descricao": "LIGAÇÃO DE ÁGUA RURAL",
+      "n_preco": "411062",
+      "unidade": "un",
+      "quantidade": 593.0
+    },
+    {
+      "item": "02040200",
+      "descricao": "POÇO PROFUNDO"
+    },
+    {
+      "item": "02040201",
+      "descricao": "PP Q ATÉ 10 PERF ATÉ 150M RURAL",
+      "n_preco": "410974",
+      "unidade": "un",
+      "quantidade": 1.0
+    },
+    {
+      "item": "02040202",
+      "descricao": "PP Q ATÉ 10 PERF DE 151 A 250M RURAL",
+      "n_preco": "410975",
+      "unidade": "un",
+      "quantidade": 1.0
+    },
+    {
+      "item": "02040300",
+      "descricao": "REDE DE DISTRIBUIÇÃO"
+    },
+    {
+      "item": "02040301",
+      "descricao": "RD PEAD 63 FORN",
+      "n_preco": "400509",
+      "unidade": "M",
+      "quantidade": 1409.74
+    },
+    {
+      "item": "02040302",
+      "descricao": "RD PEAD 63 MND RURAL",
+      "n_preco": "400767",
+      "unidade": "M",
+      "quantidade": 281.95
+    },
+    {
+      "item": "02040303",
+      "descricao": "RD PEAD 63 VCA ATÉ 1,25M RURAL",
+      "n_preco": "400765",
+      "unidade": "M",
+      "quantidade": 902.24
+    },
+    {
+      "item": "02040304",
+      "descricao": "RD PEAD 63 VCA DE 1,26 ATÉ 2M RURAL",
+      "n_preco": "400766",
+      "unidade": "M",
+      "quantidade": 225.56
+    },
+    {
+      "item": "02040400",
+      "descricao": "RESERVATÓRIO"
+    },
+    {
+      "item": "02040401",
+      "descricao": "RESERVATÓRIO 10 M³ RURAL",
+      "n_preco": "411372",
+      "unidade": "un",
+      "quantidade": 1.0
+    },
+    {
+      "item": "02040500",
+      "descricao": "SOLUÇÃO RURAL"
+    },
+    {
+      "item": "02040501",
+      "descricao": "SOL 6 A 19 DOM SAA RD PVC 100",
+      "n_preco": "400972",
+      "unidade": "M",
+      "quantidade": 1111.0
+    },
+    {
+      "item": "02040502",
+      "descricao": "SOL 6 A 19 DOM SAA POÇO PROF TUB",
+      "n_preco": "400973",
+      "unidade": "un",
+      "quantidade": 3.0
+    },
+    {
+      "item": "02040503",
+      "descricao": "SOL 6 A 19 DOM SAA RESERV PRFV 5000L",
+      "n_preco": "400974",
+      "unidade": "un",
+      "quantidade": 3.0
+    },
+    {
+      "item": "02040504",
+      "descricao": "SOL AC 20 DOM DENT BF 1KM SAA AD PVC 100",
+      "n_preco": "400975",
+      "unidade": "M",
+      "quantidade": 72.0
+    },
+    {
+      "item": "02040505",
+      "descricao": "SOL AC 20 DOM DENT BF 1KM SAA RD PVC 100",
+      "n_preco": "400976",
+      "unidade": "M",
+      "quantidade": 100.0
+    },
+    {
+      "item": "02040506",
+      "descricao": "SOL AC 20 DOM DENT BF 1KM SAA RD PVC 100",
+      "n_preco": "400978",
+      "unidade": "M",
+      "quantidade": 329.0
+    },
+    {
+      "item": "02040507",
+      "descricao": "SOL AC 20 DOM FORA BF 1KM SAA POÇO PROF",
+      "n_preco": "400979",
+      "unidade": "un",
+      "quantidade": 1.0
+    },
+    {
+      "item": "02040508",
+      "descricao": "SOL AC 20 DOM DEN BF 1KM RES PRFV 10000L",
+      "n_preco": "400980",
+      "unidade": "un",
+      "quantidade": 1.0
+    },
+    {
+      "item": "02040509",
+      "descricao": "SOL IND POÇO CLORAÇÃO",
+      "n_preco": "411016",
+      "unidade": "un",
+      "quantidade": 62.0
+    },
+    {
+      "item": "03000000",
+      "descricao": "NAZARÉ PAULISTA"
+    },
+    {
+      "item": "03010000",
+      "descricao": "FORMAL ESGOTO"
+    },
+    {
+      "item": "03010100",
+      "descricao": "EEE"
+    },
+    {
+      "item": "03010101",
+      "descricao": "EEE ATÉ 3 CV FORN BOMBA FORM",
+      "n_preco": "400195",
+      "unidade": "un",
+      "quantidade": 9.0
+    },
+    {
+      "item": "03010102",
+      "descricao": "EEE ATÉ 3 CV FORN PAINEL FORM",
+      "n_preco": "400197",
+      "unidade": "un",
+      "quantidade": 9.0
+    },
+    {
+      "item": "03010103",
+      "descricao": "EEE ATÉ 3 CV SERVIÇOS FORM",
+      "n_preco": "400199",
+      "unidade": "un",
+      "quantidade": 9.0
+    },
+    {
+      "item": "03010200",
+      "descricao": "ETE"
+    },
+    {
+      "item": "03010201",
+      "descricao": "ETE Q 1,01 A 2 FOR INS EST CP FORM",
+      "n_preco": "400241",
+      "unidade": "un",
+      "quantidade": 1.0
+    },
+    {
+      "item": "03010202",
+      "descricao": "ETE Q 1,01 A 2 SERVIÇOS FORM",
+      "n_preco": "400242",
+      "unidade": "un",
+      "quantidade": 1.0
+    },
+    {
+      "item": "03010300",
+      "descricao": "LIGAÇÕES ESGOTO"
+    },
+    {
+      "item": "03010301",
+      "descricao": "LIGAÇÃO DE ESGOTO FORM",
+      "n_preco": "411063",
+      "unidade": "un",
+      "quantidade": 828.0
+    },
+    {
+      "item": "03010400",
+      "descricao": "LINHA DE RECALQUE"
+    },
+    {
+      "item": "03010401",
+      "descricao": "LR PEAD 110 FORN",
+      "n_preco": "400320",
+      "unidade": "M",
+      "quantidade": 5836.24
+    },
+    {
+      "item": "03010402",
+      "descricao": "LR PEAD 110 MND FORM",
+      "n_preco": "400321",
+      "unidade": "M",
+      "quantidade": 1167.25
+    },
+    {
+      "item": "03010403",
+      "descricao": "LR PEAD 110 VCA ATÉ 1,25M FORM",
+      "n_preco": "400323",
+      "unidade": "M",
+      "quantidade": 3735.19
+    },
+    {
+      "item": "03010404",
+      "descricao": "LR PEAD 110 VCA DE 1,26 ATÉ 2M FORM",
+      "n_preco": "400325",
+      "unidade": "M",
+      "quantidade": 933.8
+    },
+    {
+      "item": "03010500",
+      "descricao": "REDE COLETORA"
+    },
+    {
+      "item": "03010501",
+      "descricao": "RC PVC 150 FORN",
+      "n_preco": "400408",
+      "unidade": "M",
+      "quantidade": 25430.71
+    },
+    {
+      "item": "03010502",
+      "descricao": "RC PVC 150 VCA ATÉ 2M FORM",
+      "n_preco": "400412",
+      "unidade": "M",
+      "quantidade": 20344.57
+    },
+    {
+      "item": "03010503",
+      "descricao": "RC PVC 150 VCA DE 2 A 4M FORM",
+      "n_preco": "400418",
+      "unidade": "M",
+      "quantidade": 5086.14
+    },
+    {
+      "item": "03020000",
+      "descricao": "FORMAL ÁGUA"
+    },
+    {
+      "item": "03020100",
+      "descricao": "ADUTORA"
+    },
+    {
+      "item": "03020101",
+      "descricao": "AD PEAD 110 FORN",
+      "n_preco": "400019",
+      "unidade": "M",
+      "quantidade": 150.25
+    },
+    {
+      "item": "03020102",
+      "descricao": "AD PEAD 110 MND FORM",
+      "n_preco": "400020",
+      "unidade": "M",
+      "quantidade": 30.05
+    },
+    {
+      "item": "03020103",
+      "descricao": "AD PEAD 110 VCA ATÉ 1,25M FORM",
+      "n_preco": "400022",
+      "unidade": "M",
+      "quantidade": 96.16
+    },
+    {
+      "item": "03020104",
+      "descricao": "AD PEAD 110 VCA DE 1,26 ATÉ 2M FORM",
+      "n_preco": "400024",
+      "unidade": "M",
+      "quantidade": 24.04
+    },
+    {
+      "item": "03020200",
+      "descricao": "BOOSTER"
+    },
+    {
+      "item": "03020201",
+      "descricao": "BOOSTER ATÉ 4 CV FORM",
+      "n_preco": "410924",
+      "unidade": "un",
+      "quantidade": 2.0
+    },
+    {
+      "item": "03020300",
+      "descricao": "CAPTAÇÃO SUPERFICIAL"
+    },
+    {
+      "item": "03020301",
+      "descricao": "CAP SUP Q ATÉ 3 FORN BOMBA FORM",
+      "n_preco": "410101",
+      "unidade": "un",
+      "quantidade": 1.0
+    },
+    {
+      "item": "03020302",
+      "descricao": "CAP SUP Q ATÉ 3 FORN PAINEL FORM",
+      "n_preco": "400101",
+      "unidade": "un",
+      "quantidade": 1.0
+    },
+    {
+      "item": "03020303",
+      "descricao": "CAP SUP Q ATÉ 3 SERVIÇOS FORM",
+      "n_preco": "400102",
+      "unidade": "un",
+      "quantidade": 1.0
+    },
+    {
+      "item": "03020400",
+      "descricao": "ETA"
+    },
+    {
+      "item": "03020401",
+      "descricao": "ETA Q ATÉ 5 FOR INS EST CP FORM",
+      "n_preco": "400221",
+      "unidade": "un",
+      "quantidade": 1.0
+    },
+    {
+      "item": "03020402",
+      "descricao": "ETA Q ATÉ 5 SERVIÇOS FORM",
+      "n_preco": "400222",
+      "unidade": "un",
+      "quantidade": 1.0
+    },
+    {
+      "item": "03020500",
+      "descricao": "LIGAÇÕES ÁGUA"
+    },
+    {
+      "item": "03020501",
+      "descricao": "LIGAÇÃO DE ÁGUA FORM",
+      "n_preco": "411061",
+      "unidade": "un",
+      "quantidade": 266.0
+    },
+    {
+      "item": "03020600",
+      "descricao": "POÇO PROFUNDO"
+    },
+    {
+      "item": "03020601",
+      "descricao": "PP Q ATÉ 10 PERF ATÉ 150M FORM",
+      "n_preco": "400372",
+      "unidade": "un",
+      "quantidade": 2.0
+    },
+    {
+      "item": "03020602",
+      "descricao": "PP Q ATÉ 10 PERF DE 151 A 250M FORM",
+      "n_preco": "400373",
+      "unidade": "un",
+      "quantidade": 2.0
+    },
+    {
+      "item": "03020700",
+      "descricao": "REDE PRIMÁRIA"
+    },
+    {
+      "item": "03020701",
+      "descricao": "AD PEAD 110 FORN",
+      "n_preco": "400454",
+      "unidade": "M",
+      "quantidade": 4939.72
+    },
+    {
+      "item": "03020702",
+      "descricao": "AD PEAD 110 MND FORM",
+      "n_preco": "400455",
+      "unidade": "M",
+      "quantidade": 987.94
+    },
+    {
+      "item": "03020703",
+      "descricao": "AD PEAD 110 VCA ATÉ 1,25M FORM",
+      "n_preco": "400457",
+      "unidade": "M",
+      "quantidade": 3161.42
+    },
+    {
+      "item": "03020704",
+      "descricao": "AD PEAD 110 VCA DE 1,26 ATÉ 2M FORM",
+      "n_preco": "400459",
+      "unidade": "M",
+      "quantidade": 790.36
+    },
+    {
+      "item": "03020800",
+      "descricao": "REDE DE DISTRIBUIÇÃO"
+    },
+    {
+      "item": "03020801",
+      "descricao": "RD PEAD 63 FORN",
+      "n_preco": "400509",
+      "unidade": "M",
+      "quantidade": 9380.0
+    },
+    {
+      "item": "03020802",
+      "descricao": "RD PEAD 63 MND FORM",
+      "n_preco": "400510",
+      "unidade": "M",
+      "quantidade": 1876.0
+    },
+    {
+      "item": "03020803",
+      "descricao": "RD PEAD 63 VCA ATÉ 1,25M FORM",
+      "n_preco": "400511",
+      "unidade": "M",
+      "quantidade": 6003.2
+    },
+    {
+      "item": "03020804",
+      "descricao": "RD PEAD 63 VCA DE 1,26 ATÉ 2M FORM",
+      "n_preco": "400512",
+      "unidade": "M",
+      "quantidade": 1500.8
+    },
+    {
+      "item": "03020805",
+      "descricao": "RD PEAD 90 FORN",
+      "n_preco": "400516",
+      "unidade": "M",
+      "quantidade": 1496.15
+    },
+    {
+      "item": "03020806",
+      "descricao": "RD PEAD 90 MND FORM",
+      "n_preco": "400517",
+      "unidade": "M",
+      "quantidade": 299.23
+    },
+    {
+      "item": "03020807",
+      "descricao": "RD PEAD 90 VCA ATÉ 1,25M FORM",
+      "n_preco": "400518",
+      "unidade": "M",
+      "quantidade": 957.54
+    },
+    {
+      "item": "03020808",
+      "descricao": "RD PEAD 90 VCA DE 1,26 ATÉ 2M FORM",
+      "n_preco": "400519",
+      "unidade": "M",
+      "quantidade": 239.38
+    },
+    {
+      "item": "03020900",
+      "descricao": "RESERVATÓRIO"
+    },
+    {
+      "item": "03020901",
+      "descricao": "RESERVATÓRIO 50 M³ FORM",
+      "n_preco": "400569",
+      "unidade": "un",
+      "quantidade": 3.0
+    },
+    {
+      "item": "03020902",
+      "descricao": "RESERVATÓRIO 500 M³ FORM",
+      "n_preco": "400570",
+      "unidade": "un",
+      "quantidade": 1.0
+    },
+    {
+      "item": "03021000",
+      "descricao": "VRP"
+    },
+    {
+      "item": "03021001",
+      "descricao": "VRP AMT = 10 MCA FORM",
+      "n_preco": "400589",
+      "unidade": "un",
+      "quantidade": 4.0
+    },
+    {
+      "item": "03021002",
+      "descricao": "VRP AMT = 12,5 MCA FORM",
+      "n_preco": "411194",
+      "unidade": "un",
+      "quantidade": 1.0
+    },
+    {
+      "item": "03030000",
+      "descricao": "RURAL ESGOTO"
+    },
+    {
+      "item": "03030100",
+      "descricao": "COLETOR TRONCO"
+    },
+    {
+      "item": "03030101",
+      "descricao": "CT PVC 200 FORN",
+      "n_preco": "400653",
+      "unidade": "M",
+      "quantidade": 653.41
+    },
+    {
+      "item": "03030102",
+      "descricao": "CT PVC 200 VCA ATÉ 2M RURAL",
+      "n_preco": "411333",
+      "unidade": "M",
+      "quantidade": 392.05
+    },
+    {
+      "item": "03030103",
+      "descricao": "CT PVC 200 VCA DE 2 A 4M RURAL",
+      "n_preco": "411334",
+      "unidade": "M",
+      "quantidade": 261.36
+    },
+    {
+      "item": "03030200",
+      "descricao": "CONDUTO FORÇADO"
+    },
+    {
+      "item": "03030201",
+      "descricao": "CF PEAD 110 FORN",
+      "n_preco": "400148",
+      "unidade": "M",
+      "quantidade": 373.06
+    },
+    {
+      "item": "03030202",
+      "descricao": "CF PEAD 110 MND RURAL",
+      "n_preco": "411363",
+      "unidade": "M",
+      "quantidade": 74.61
+    },
+    {
+      "item": "03030203",
+      "descricao": "CF PEAD 110 VCA ATÉ 1,25M RURAL",
+      "n_preco": "411361",
+      "unidade": "M",
+      "quantidade": 238.76
+    },
+    {
+      "item": "03030204",
+      "descricao": "CF PEAD 110 VCA DE 1,26 ATÉ 2M RURAL",
+      "n_preco": "411362",
+      "unidade": "M",
+      "quantidade": 59.69
+    },
+    {
+      "item": "03030300",
+      "descricao": "EEE"
+    },
+    {
+      "item": "03030301",
+      "descricao": "EEE ATÉ 3 CV FORN BOMBA RURAL",
+      "n_preco": "400756",
+      "unidade": "un",
+      "quantidade": 5.0
+    },
+    {
+      "item": "03030302",
+      "descricao": "EEE ATÉ 3 CV FORN PAINEL RURAL",
+      "n_preco": "400757",
+      "unidade": "un",
+      "quantidade": 5.0
+    },
+    {
+      "item": "03030303",
+      "descricao": "EEE ATÉ 3 CV SERVIÇOS RURAL",
+      "n_preco": "400758",
+      "unidade": "un",
+      "quantidade": 5.0
+    },
+    {
+      "item": "03030400",
+      "descricao": "ETE"
+    },
+    {
+      "item": "03030401",
+      "descricao": "ETE Q 1,01 A 2 FOR INS EST CP RURAL",
+      "n_preco": "411354",
+      "unidade": "un",
+      "quantidade": 2.0
+    },
+    {
+      "item": "03030402",
+      "descricao": "ETE Q 1,01 A 2 SERVIÇOS RURAL",
+      "n_preco": "411353",
+      "unidade": "un",
+      "quantidade": 2.0
+    },
+    {
+      "item": "03030403",
+      "descricao": "ETE Q 2,01 A 3 FOR INS EST CP RURAL",
+      "n_preco": "411356",
+      "unidade": "un",
+      "quantidade": 1.0
+    },
+    {
+      "item": "03030404",
+      "descricao": "ETE Q 2,01 A 3 SERVIÇOS RURAL",
+      "n_preco": "411355",
+      "unidade": "un",
+      "quantidade": 1.0
+    },
+    {
+      "item": "03030500",
+      "descricao": "LIGAÇÕES ESGOTO"
+    },
+    {
+      "item": "03030501",
+      "descricao": "LIGAÇÃO DE ESGOTO RURAL",
+      "n_preco": "411065",
+      "unidade": "un",
+      "quantidade": 1908.0
+    },
+    {
+      "item": "03030600",
+      "descricao": "LINHA DE RECALQUE"
+    },
+    {
+      "item": "03030601",
+      "descricao": "LR PEAD 110 FORN",
+      "n_preco": "400320",
+      "unidade": "M",
+      "quantidade": 1985.84
+    },
+    {
+      "item": "03030602",
+      "descricao": "LR PEAD 110 MND RURAL",
+      "n_preco": "400781",
+      "unidade": "M",
+      "quantidade": 397.17
+    },
+    {
+      "item": "03030603",
+      "descricao": "LR PEAD 110 VCA ATÉ 1,25M RURAL",
+      "n_preco": "400780",
+      "unidade": "M",
+      "quantidade": 1270.94
+    },
+    {
+      "item": "03030604",
+      "descricao": "LR PEAD 110 VCA DE 1,26 ATÉ 2M RURAL",
+      "n_preco": "400779",
+      "unidade": "M",
+      "quantidade": 317.73
+    },
+    {
+      "item": "03030605",
+      "descricao": "LR PVCO 150 FORN",
+      "n_preco": "400680",
+      "unidade": "M",
+      "quantidade": 3233.39
+    },
+    {
+      "item": "03030606",
+      "descricao": "LR PVCO 150 VCA ATÉ 1,25M RURAL",
+      "n_preco": "411364",
+      "unidade": "M",
+      "quantidade": 646.68
+    },
+    {
+      "item": "03030607",
+      "descricao": "LR PVCO 150 VCA DE 1,26 ATÉ 2M RURAL",
+      "n_preco": "411365",
+      "unidade": "M",
+      "quantidade": 2586.71
+    },
+    {
+      "item": "03030700",
+      "descricao": "REDE COLETORA"
+    },
+    {
+      "item": "03030701",
+      "descricao": "RC PVC 150 FORN",
+      "n_preco": "400408",
+      "unidade": "M",
+      "quantidade": 589.14
+    },
+    {
+      "item": "03030702",
+      "descricao": "RC PVC 150 VCA ATÉ 2M RURAL",
+      "n_preco": "400414",
+      "unidade": "M",
+      "quantidade": 471.31
+    },
+    {
+      "item": "03030703",
+      "descricao": "RC PVC 150 VCA DE 2 A 4M RURAL",
+      "n_preco": "400420",
+      "unidade": "M",
+      "quantidade": 117.83
+    },
+    {
+      "item": "03030800",
+      "descricao": "SOLUÇÃO RURAL"
+    },
+    {
+      "item": "03030801",
+      "descricao": "SOL 2 A 5 DOM DIG MUL 2 A 5 C SEC E SUM",
+      "n_preco": "400966",
+      "unidade": "un",
+      "quantidade": 69.0
+    },
+    {
+      "item": "03030802",
+      "descricao": "SOL 2 A 5 DOMICILIOS SES RC",
+      "n_preco": "400968",
+      "unidade": "M",
+      "quantidade": 6096.0
+    },
+    {
+      "item": "03030803",
+      "descricao": "SOL AC 6 DOM DIG MUL 2 A 5 C SEC E SUM",
+      "n_preco": "400981",
+      "unidade": "un",
+      "quantidade": 14.0
+    },
+    {
+      "item": "03030804",
+      "descricao": "SOL IND SES DIG IND CX SECA E SUMID",
+      "n_preco": "400983",
+      "unidade": "un",
+      "quantidade": 77.0
+    },
+    {
+      "item": "03040000",
+      "descricao": "RURAL ÁGUA"
+    },
+    {
+      "item": "03040100",
+      "descricao": "ADUTORA"
+    },
+    {
+      "item": "03040101",
+      "descricao": "AD PEAD 160 FORN",
+      "n_preco": "400028",
+      "unidade": "M",
+      "quantidade": 2521.77
+    },
+    {
+      "item": "03040102",
+      "descricao": "AD PEAD 160 MND RURAL",
+      "n_preco": "411323",
+      "unidade": "M",
+      "quantidade": 504.35
+    },
+    {
+      "item": "03040103",
+      "descricao": "AD PEAD 160 VCA ATÉ 1,25M RURAL",
+      "n_preco": "411321",
+      "unidade": "M",
+      "quantidade": 1613.93
+    },
+    {
+      "item": "03040104",
+      "descricao": "AD PEAD 160 VCA DE 1,26 ATÉ 2M RURAL",
+      "n_preco": "411322",
+      "unidade": "M",
+      "quantidade": 403.48
+    },
+    {
+      "item": "03040200",
+      "descricao": "BOOSTER"
+    },
+    {
+      "item": "03040201",
+      "descricao": "BOOSTER ATÉ 4 CV RURAL",
+      "n_preco": "410925",
+      "unidade": "un",
+      "quantidade": 1.0
+    },
+    {
+      "item": "03040300",
+      "descricao": "CAPTAÇÃO SUPERFICIAL"
+    },
+    {
+      "item": "03040301",
+      "descricao": "CAP SUP Q 3,01 A 5 FORN BOMBA RURAL",
+      "n_preco": "411328",
+      "unidade": "un",
+      "quantidade": 1.0
+    },
+    {
+      "item": "03040302",
+      "descricao": "CAP SUP Q 3,01 A 5 FORN PAINEL RURAL",
+      "n_preco": "411329",
+      "unidade": "un",
+      "quantidade": 1.0
+    },
+    {
+      "item": "03040303",
+      "descricao": "CAP SUP Q 3,01 A 5 SERVIÇOS RURAL",
+      "n_preco": "411327",
+      "unidade": "un",
+      "quantidade": 1.0
+    },
+    {
+      "item": "03040400",
+      "descricao": "EEAB"
+    },
+    {
+      "item": "03040401",
+      "descricao": "EEAB ATÉ 3 CV FORN BOMBA RURAL",
+      "n_preco": "400794",
+      "unidade": "un",
+      "quantidade": 1.0
+    },
+    {
+      "item": "03040402",
+      "descricao": "EEAB ATÉ 3 CV FORN PAINEL RURAL",
+      "n_preco": "400793",
+      "unidade": "un",
+      "quantidade": 1.0
+    },
+    {
+      "item": "03040403",
+      "descricao": "EEAB ATÉ 3 CV SERVIÇOS RURAL",
+      "n_preco": "400795",
+      "unidade": "un",
+      "quantidade": 1.0
+    },
+    {
+      "item": "03040500",
+      "descricao": "EEAT"
+    },
+    {
+      "item": "03040501",
+      "descricao": "EEAT DE 5,01 A 10 CV FORN BOMBA RURAL",
+      "n_preco": "411282",
+      "unidade": "un",
+      "quantidade": 1.0
+    },
+    {
+      "item": "03040502",
+      "descricao": "EEAT DE 5,01 A 10 CV FORN PAINEL RURAL",
+      "n_preco": "411283",
+      "unidade": "un",
+      "quantidade": 1.0
+    },
+    {
+      "item": "03040503",
+      "descricao": "EEAT DE 5,01 A 10 CV SERVIÇOS RURAL",
+      "n_preco": "411281",
+      "unidade": "un",
+      "quantidade": 1.0
+    },
+    {
+      "item": "03040600",
+      "descricao": "ETA"
+    },
+    {
+      "item": "03040601",
+      "descricao": "ETA Q ATÉ 5 FOR INS EST CP RURAL",
+      "n_preco": "400799",
+      "unidade": "un",
+      "quantidade": 1.0
+    },
+    {
+      "item": "03040602",
+      "descricao": "ETA Q ATÉ 5 SERVIÇOS RURAL",
+      "n_preco": "410801",
+      "unidade": "un",
+      "quantidade": 1.0
+    },
+    {
+      "item": "03040700",
+      "descricao": "LIGAÇÕES ÁGUA"
+    },
+    {
+      "item": "03040701",
+      "descricao": "LIGAÇÃO DE ÁGUA RURAL",
+      "n_preco": "411062",
+      "unidade": "un",
+      "quantidade": 1791.0
+    },
+    {
+      "item": "03040800",
+      "descricao": "REDE PRIMÁRIA"
+    },
+    {
+      "item": "03040801",
+      "descricao": "AD PEAD 160 FORN",
+      "n_preco": "410998",
+      "unidade": "M",
+      "quantidade": 3301.99
+    },
+    {
+      "item": "03040802",
+      "descricao": "AD PEAD 160 MND RURAL",
+      "n_preco": "411208",
+      "unidade": "M",
+      "quantidade": 660.4
+    },
+    {
+      "item": "03040803",
+      "descricao": "AD PEAD 160 VCA ATÉ 1,25M RURAL",
+      "n_preco": "411206",
+      "unidade": "M",
+      "quantidade": 2113.27
+    },
+    {
+      "item": "03040804",
+      "descricao": "AD PEAD 160 VCA DE 1,26 ATÉ 2M RURAL",
+      "n_preco": "411207",
+      "unidade": "M",
+      "quantidade": 528.32
+    },
+    {
+      "item": "03040900",
+      "descricao": "REDE DE DISTRIBUIÇÃO"
+    },
+    {
+      "item": "03040901",
+      "descricao": "RD PEAD 63 FORN",
+      "n_preco": "400509",
+      "unidade": "M",
+      "quantidade": 381.62
+    },
+    {
+      "item": "03040902",
+      "descricao": "RD PEAD 63 MND RURAL",
+      "n_preco": "400767",
+      "unidade": "M",
+      "quantidade": 76.32
+    },
+    {
+      "item": "03040903",
+      "descricao": "RD PEAD 63 VCA ATÉ 1,25M RURAL",
+      "n_preco": "400765",
+      "unidade": "M",
+      "quantidade": 244.23
+    },
+    {
+      "item": "03040904",
+      "descricao": "RD PEAD 63 VCA DE 1,26 ATÉ 2M RURAL",
+      "n_preco": "400766",
+      "unidade": "M",
+      "quantidade": 61.06
+    },
+    {
+      "item": "03041000",
+      "descricao": "RESERVATÓRIO"
+    },
+    {
+      "item": "03041001",
+      "descricao": "RESERVATÓRIO 200 M³ RURAL",
+      "n_preco": "411317",
+      "unidade": "un",
+      "quantidade": 1.0
+    },
+    {
+      "item": "03041100",
+      "descricao": "SOLUÇÃO RURAL"
+    },
+    {
+      "item": "03041101",
+      "descricao": "SOL 2 A 5 DOM SAA POÇO CLORAÇÃO",
+      "n_preco": "400970",
+      "unidade": "un",
+      "quantidade": 68.0
+    },
+    {
+      "item": "03041102",
+      "descricao": "SOL 6 A 19 DOM SAA RESERV PRFV 5000L",
+      "n_preco": "400974",
+      "unidade": "un",
+      "quantidade": 12.0
+    },
+    {
+      "item": "03041103",
+      "descricao": "SOL AC 20 DOM DENT BF 1KM SAA RD PVC 100",
+      "n_preco": "400978",
+      "unidade": "M",
+      "quantidade": 1450.0
+    },
+    {
+      "item": "03041104",
+      "descricao": "SOL AC 20 DOM FORA BF 1KM SAA POÇO PROF",
+      "n_preco": "400979",
+      "unidade": "un",
+      "quantidade": 1.0
+    },
+    {
+      "item": "03041105",
+      "descricao": "SOL AC 20 DOM DEN BF 1KM RES PRFV 10000L",
+      "n_preco": "400980",
+      "unidade": "un",
+      "quantidade": 1.0
+    },
+    {
+      "item": "03041106",
+      "descricao": "SOL IND POÇO CLORAÇÃO",
+      "n_preco": "411016",
+      "unidade": "un",
+      "quantidade": 76.0
+    },
+    {
+      "item": "04000000",
+      "descricao": "PEDRA BELA"
+    },
+    {
+      "item": "04010000",
+      "descricao": "FORMAL ESGOTO"
+    },
+    {
+      "item": "04010100",
+      "descricao": "COLETOR TRONCO"
+    },
+    {
+      "item": "04010101",
+      "descricao": "CT PVC 150 FORN",
+      "n_preco": "400652",
+      "unidade": "M",
+      "quantidade": 111.99
+    },
+    {
+      "item": "04010102",
+      "descricao": "CT PVC 150 VCA ATÉ 2M FORM",
+      "n_preco": "400130",
+      "unidade": "M",
+      "quantidade": 67.19
+    },
+    {
+      "item": "04010103",
+      "descricao": "CT PVC 150 VCA DE 2 A 4M FORM",
+      "n_preco": "400131",
+      "unidade": "M",
+      "quantidade": 44.8
+    },
+    {
+      "item": "04020000",
+      "descricao": "FORMAL ÁGUA"
+    },
+    {
+      "item": "04030000",
+      "descricao": "RURAL ESGOTO"
+    },
+    {
+      "item": "04030100",
+      "descricao": "LIGAÇÕES ESGOTO"
+    },
+    {
+      "item": "04030101",
+      "descricao": "LIGAÇÃO DE ESGOTO RURAL",
+      "n_preco": "411065",
+      "unidade": "un",
+      "quantidade": 466.0
+    },
+    {
+      "item": "04040000",
+      "descricao": "RURAL ÁGUA"
+    },
+    {
+      "item": "04040100",
+      "descricao": "LIGAÇÕES ÁGUA"
+    },
+    {
+      "item": "04040101",
+      "descricao": "LIGAÇÃO DE ÁGUA RURAL",
+      "n_preco": "411062",
+      "unidade": "un",
+      "quantidade": 734.0
+    },
+    {
+      "item": "05000000",
+      "descricao": "PINHALZINHO"
+    },
+    {
+      "item": "05010000",
+      "descricao": "FORMAL ESGOTO"
+    },
+    {
+      "item": "05010700",
+      "descricao": "LIGAÇÕES ESGOTO"
+    },
+    {
+      "item": "05010701",
+      "descricao": "LIGAÇÃO DE ESGOTO FORM",
+      "n_preco": "411063",
+      "unidade": "un",
+      "quantidade": 1741.0
+    },
+    {
+      "item": "05020000",
+      "descricao": "FORMAL ÁGUA"
+    },
+    {
+      "item": "05020500",
+      "descricao": "LIGAÇÕES ÁGUA"
+    },
+    {
+      "item": "05020501",
+      "descricao": "LIGAÇÃO DE ÁGUA FORM",
+      "n_preco": "411061",
+      "unidade": "un",
+      "quantidade": 1390.0
+    },
+    {
+      "item": "05030000",
+      "descricao": "RURAL ESGOTO"
+    },
+    {
+      "item": "05030401",
+      "descricao": "LIGAÇÃO DE ESGOTO RURAL",
+      "n_preco": "411065",
+      "unidade": "un",
+      "quantidade": 865.0
+    },
+    {
+      "item": "05040000",
+      "descricao": "RURAL ÁGUA"
+    },
+    {
+      "item": "05040701",
+      "descricao": "LIGAÇÃO DE ÁGUA RURAL",
+      "n_preco": "411062",
+      "unidade": "un",
+      "quantidade": 1161.0
+    },
+    {
+      "item": "06000000",
+      "descricao": "PIRACAIA"
+    },
+    {
+      "item": "06010000",
+      "descricao": "FORMAL ESGOTO"
+    },
+    {
+      "item": "06010401",
+      "descricao": "LIGAÇÃO DE ESGOTO FORM",
+      "n_preco": "411063",
+      "unidade": "un",
+      "quantidade": 2606.0
+    },
+    {
+      "item": "06020000",
+      "descricao": "FORMAL ÁGUA"
+    },
+    {
+      "item": "06020701",
+      "descricao": "LIGAÇÃO DE ÁGUA FORM",
+      "n_preco": "411061",
+      "unidade": "un",
+      "quantidade": 1294.0
+    },
+    {
+      "item": "06030000",
+      "descricao": "RURAL ESGOTO"
+    },
+    {
+      "item": "06030101",
+      "descricao": "LIGAÇÃO DE ESGOTO RURAL",
+      "n_preco": "411065",
+      "unidade": "un",
+      "quantidade": 504.0
+    },
+    {
+      "item": "06040000",
+      "descricao": "RURAL ÁGUA"
+    },
+    {
+      "item": "06040101",
+      "descricao": "LIGAÇÃO DE ÁGUA RURAL",
+      "n_preco": "411062",
+      "unidade": "un",
+      "quantidade": 808.0
+    },
+    {
+      "item": "07000000",
+      "descricao": "SOCORRO"
+    },
+    {
+      "item": "07010000",
+      "descricao": "FORMAL ESGOTO"
+    },
+    {
+      "item": "07010301",
+      "descricao": "LIGAÇÃO DE ESGOTO FORM",
+      "n_preco": "411063",
+      "unidade": "un",
+      "quantidade": 1107.0
+    },
+    {
+      "item": "07020000",
+      "descricao": "FORMAL ÁGUA"
+    },
+    {
+      "item": "07020401",
+      "descricao": "LIGAÇÃO DE ÁGUA FORM",
+      "n_preco": "411061",
+      "unidade": "un",
+      "quantidade": 742.0
+    },
+    {
+      "item": "07030000",
+      "descricao": "RURAL ESGOTO"
+    },
+    {
+      "item": "07030201",
+      "descricao": "LIGAÇÃO DE ESGOTO RURAL",
+      "n_preco": "411065",
+      "unidade": "un",
+      "quantidade": 1585.0
+    },
+    {
+      "item": "07040000",
+      "descricao": "RURAL ÁGUA"
+    },
+    {
+      "item": "07040101",
+      "descricao": "LIGAÇÃO DE ÁGUA RURAL",
+      "n_preco": "411062",
+      "unidade": "un",
+      "quantidade": 2397.0
+    },
+    {
+      "item": "08000000",
+      "descricao": "VARGEM"
+    },
+    {
+      "item": "08010000",
+      "descricao": "FORMAL ESGOTO"
+    },
+    {
+      "item": "08010701",
+      "descricao": "LIGAÇÃO DE ESGOTO FORM",
+      "n_preco": "411063",
+      "unidade": "un",
+      "quantidade": 830.0
+    },
+    {
+      "item": "08020000",
+      "descricao": "FORMAL ÁGUA"
+    },
+    {
+      "item": "08020401",
+      "descricao": "LIGAÇÃO DE ÁGUA FORM",
+      "n_preco": "411061",
+      "unidade": "un",
+      "quantidade": 398.0
+    },
+    {
+      "item": "08030000",
+      "descricao": "RURAL ESGOTO"
+    },
+    {
+      "item": "08030101",
+      "descricao": "LIGAÇÃO DE ESGOTO RURAL",
+      "n_preco": "411065",
+      "unidade": "un",
+      "quantidade": 458.0
+    },
+    {
+      "item": "08040000",
+      "descricao": "RURAL ÁGUA"
+    },
+    {
+      "item": "08040101",
+      "descricao": "LIGAÇÃO DE ÁGUA RURAL",
+      "n_preco": "411062",
+      "unidade": "un",
+      "quantidade": 627.0
+    }
+  ]
+}
