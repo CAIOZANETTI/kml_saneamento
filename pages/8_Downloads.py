@@ -105,7 +105,7 @@ with st.container(border=True):
 # ── 4. Comparacao KML x JSON ──────────────────────────────────────
 
 lotes = sorted(df_linear['lote'].unique()) if not df_linear.empty and 'lote' in df_linear.columns else []
-lotes_com_json = [l for l in lotes if parser_json.carregar_json(l.replace('Lote ', '').strip())]
+lotes_com_json = [l for l in lotes if parser_json.carregar_json(l)]
 
 if lotes_com_json:
     st.divider()

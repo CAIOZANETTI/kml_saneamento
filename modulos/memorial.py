@@ -1105,9 +1105,8 @@ def gerar_html_comparacao(resultados: dict) -> str:
     secoes_lote = ''
     for lote, dados in sorted(resultados.items()):
         cab_json = ''
-        num = lote.replace('Lote ', '').strip()
         from modulos.parser_json import carregar_json, extrair_cabecalho
-        jd = carregar_json(num)
+        jd = carregar_json(lote)
         if jd:
             cab = extrair_cabecalho(jd)
             cab_json = f' — {cab["objeto"]}'
@@ -1301,9 +1300,8 @@ def gerar_html_questionamentos(resultados: dict) -> str:
     total_questoes = {}
 
     for lote, dados in sorted(resultados.items()):
-        num = lote.replace('Lote ', '').strip()
         from modulos.parser_json import carregar_json, extrair_cabecalho
-        jd = carregar_json(num)
+        jd = carregar_json(lote)
         cab_json = ''
         if jd:
             cab = extrair_cabecalho(jd)

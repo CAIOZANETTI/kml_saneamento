@@ -27,8 +27,7 @@ if not lotes:
 lotes_com_json = []
 lotes_sem_json = []
 for lote in lotes:
-    num = lote.replace('Lote ', '').strip()
-    if parser_json.carregar_json(num):
+    if parser_json.carregar_json(lote):
         lotes_com_json.append(lote)
     else:
         lotes_sem_json.append(lote)
