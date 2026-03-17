@@ -1,230 +1,147 @@
-# Plano de Redesign UX — Concepcao de Saneamento
+# Plano: Página de Comparação KML vs JSON
 
-## Diagnostico Atual
+## Contexto
 
-O sistema tem **dados ricos** mas apresentacao **dispersa e amadora**:
-- Metrics soltos sem bordas nem agrupamento visual
-- Texto puro (`st.info`) para resumo — nao conta historia
-- Graficos sem contexto narrativo (titulo solto → grafico → proximo)
-- Tabelas com `st.dataframe` generico sem formatacao visual
-- Headers com `unsafe_allow_html` — pode usar markdown nativo
-- Paginas sao listas verticais sem secoes claras
-- Nenhum uso de `st.container(border=True)`, `st.badge`, `st.table` com emojis/cores
+Cada lote possui dois documentos:
+- **KML** (`data/kml/Lote_XX.kml`): Dados geoespaciais com redes lineares, equipamentos pontuais e áreas de expansão
+- **JSON** (`data/json/sabesp_XX.json`): Planilha orçamentária com quantitativos por município/frente
 
-## Principios de Design
+O objetivo é cruzar os dados e identificar desvios de consistência.
 
-1. **Hierarquia visual**: KPIs no topo com `st.metric(border=True)` → contexto narrativo → graficos → tabelas
-2. **Agrupamento semantico**: `st.container(border=True)` para agrupar blocos relacionados
-3. **Contadores com indicadores**: `st.badge` para status (OK/Atencao/Critico) e categorias
-4. **Tabelas ricas**: `st.table(border="horizontal")` com emojis de status para tabelas-resumo pequenas
-5. **Narrativa**: cada secao abre com 1 frase de contexto antes dos dados
-6. **Menos e melhor**: reduzir graficos redundantes, combinar informacao
+## Mapeamento KML - JSON
 
-## Mudancas por Pagina
+### 1. Municípios
+| KML | JSON |
+|-----|------|
+| `nm_mun` (SimpleData) | `frentes[].nome` (uppercase) |
 
----
+**Desvio já encontrado no Lote 13**: 29 municípios no KML vs 34 no JSON. Cinco municípios (Cruzália, Inúbia Paulista, Osvaldo Cruz, Pracinha, Santópolis do Aguapeí) estão no JSON mas NÃO no KML.
 
-### 1. `app.py` — Dashboard Principal (Home)
+### 2. Redes Lineares (extensão em metros)
+| KML (subtipo + material + DN) | JSON item (FORN = total fornecimento) |
+|-------------------------------|---------------------------------------|
+| Coletor Tronco, PVC, 150 | CT PVC 150 FORN |
+| Rede Coletora, PVC, 150 | RC PVC 150 FORN |
+| Rede de Distribuição, PEAD, 63 | RD PEAD 63 FORN |
+| Adutora, PEAD, 110 | AD PEAD 110 FORN |
+| Linha de Recalque, PEAD, 110 | LR PEAD 110 FORN |
 
-**Antes:** 8 metrics soltos → texto `st.info` → 2 graficos → tabela municipios
-**Depois:** Dashboard executivo que conta a historia
+### 3. Equipamentos Pontuais (contagem)
+| KML subtipo | JSON prefixo |
+|-------------|-------------|
+| ETE | "ETE Q..." |
+| EEE | "EEE ATÉ..." |
+| Reservatório | "RESERVATÓRIO..." |
+| Poço Profundo | "PP Q..." |
+| Booster | "BOOSTER..." |
 
-```
-HEADER: st.title com st.caption (sem unsafe_html)
+### 4. Domicílios / Ligações
+| KML | JSON |
+|-----|------|
+| Soma `qtd_domicilios` por layer | "LIGAÇÃO DE ÁGUA/ESGOTO" qty |
 
-BLOCO 1 — KPIs Principais (container com borda):
-  Row de 4 metrics com border=True:
-  - Extensao Total (km) — sem delta
-  - Municipios
-  - Equipamentos
-  - Areas de Expansao
+## Implementação
 
-BLOCO 2 — Composicao das Redes (container com borda):
-  Row de 2 metrics: Agua (km) + Esgoto (km)
-  Row de 2 metrics: ETEs + Pocos
-  st.caption com % agua vs esgoto
+### Etapa 1: `modulos/parser_json.py`
+- `carregar_json(lote_num)` — carrega JSON do lote
+- `extrair_quantitativos(json_data)` — retorna por município: redes (sigla+material+dn → extensão FORN), equipamentos (tipo → qty), ligações (tipo → qty)
+- Mapeamento siglas: CT→Coletor Tronco, RC→Rede Coletora, RD→Rede de Distribuição, AD→Adutora, LR→Linha de Recalque
 
-BLOCO 3 — Resumo (st.info substituido por container):
-  Texto narrativo formatado (markdown, nao info box)
+### Etapa 2: `modulos/comparador.py`
+- `comparar_municipios()` — presença/ausência
+- `comparar_redes()` — extensão KML vs JSON FORN por tipo
+- `comparar_equipamentos()` — contagem KML vs JSON
+- `comparar_ligacoes()` — domicílios KML vs ligações JSON
+- `gerar_score_consistencia()` — score geral com semáforo
 
-BLOCO 4 — Graficos (dentro de containers com titulo):
-  Grafico material
-  Grafico DN
+### Etapa 3: `pages/9_Comparacao.py`
+- Layout conforme mockup UX abaixo
 
-BLOCO 5 — Top Municipios:
-  st.table com border="horizontal" (nao dataframe)
-  Colunas com emojis e badges
-```
-
----
-
-### 2. `pages/1_Redes.py` — Diagnostico de Redes
-
-**Antes:** Titulo → 3 graficos soltos → tabela detalhada
-**Depois:** KPIs contextuais → resumo tabular rico → graficos com narrativa → tabela
+## UX da Página
 
 ```
-KPIs (container border):
-  4 metrics: Trechos Total | Extensao (km) | Materiais distintos | DN medio
-
-Resumo por Subtipo:
-  st.table com border="horizontal", colunas com formatacao
-  Subtipo | Tipo (badge agua/esgoto) | Extensao | Trechos
-
-Graficos (cada um com titulo contextual):
-  - Extensao por subtipo
-  - Extensao por municipio
-  - Extensao por metodo construtivo
-
-Tabela Detalhada (com titulo e st.caption descritivo):
-  st.dataframe (mantido, mas com caption explicativo)
+┌─────────────────────────────────────────────────────────────┐
+│  Comparação KML vs JSON                                     │
+│  Consistência entre concepção geoespacial e orçamento       │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│  ┌─── Resumo Geral ───────────────────────────────────────┐ │
+│  │                                                         │ │
+│  │  [KPI] Municípios    [KPI] Redes         [KPI] Equip.  │ │
+│  │  KML: 29 | JSON: 34  Desvio médio: 3.2%  Match: 85%   │ │
+│  │  Match: 29 | Só JSON: 5 | Só KML: 0                   │ │
+│  │                                                         │ │
+│  │  [BARRA] Score de Consistência Geral: 87%              │ │
+│  └─────────────────────────────────────────────────────────┘ │
+│                                                             │
+│  ┌─── Municípios Divergentes ─────────────────────────────┐ │
+│  │                                                         │ │
+│  │  Presentes no JSON mas ausentes no KML:                 │ │
+│  │  Cruzália, Inúbia Paulista, Osvaldo Cruz,               │ │
+│  │  Pracinha, Santópolis do Aguapeí                         │ │
+│  │                                                         │ │
+│  │  Presentes no KML mas ausentes no JSON:                 │ │
+│  │  (nenhum)                                               │ │
+│  └─────────────────────────────────────────────────────────┘ │
+│                                                             │
+│  ┌─── Filtros ────────────────────────────────────────────┐ │
+│  │  Município: [Todos]  Tipo: [Todos]  Desvio: [Todos]   │ │
+│  └────────────────────────────────────────────────────────┘ │
+│                                                             │
+│  ═══ Tab 1: Redes Lineares ═══════════════════════════     │
+│                                                             │
+│  ┌──────────────────────────────────────────────────────┐  │
+│  │ Município    │ Tipo      │ KML (m)  │ JSON (m) │ Δ%  │  │
+│  │──────────────┼───────────┼──────────┼──────────┼─────│  │
+│  │ Adamantina   │ CT PVC150 │   866.1  │   866.1  │  0% │  │
+│  │ Adamantina   │ RC PVC150 │   915.4  │   915.4  │  0% │  │
+│  │ Adamantina   │ RD PEAD63 │   921.3  │   921.3  │  0% │  │
+│  │ Assis        │ CT PVC150 │   850.2  │   863.2  │ 1.5%│  │
+│  │ Assis        │ LR PEAD110│  2322.9  │  2322.9  │  0% │  │
+│  └──────────────────────────────────────────────────────┘  │
+│  Legenda desvio: verde < 1%  amarelo 1-5%  vermelho > 5%  │
+│                                                             │
+│  ═══ Tab 2: Equipamentos ═════════════════════════════     │
+│                                                             │
+│  ┌──────────────────────────────────────────────────────┐  │
+│  │ Município    │ Equip.        │ KML │ JSON │ Status   │  │
+│  │──────────────┼───────────────┼─────┼──────┼──────────│  │
+│  │ Adamantina   │ ETE           │   1 │    1 │ OK       │  │
+│  │ Adamantina   │ Reservatório  │   1 │    1 │ OK       │  │
+│  │ Adamantina   │ Booster       │   1 │    1 │ OK       │  │
+│  │ Bastos       │ Poço Profundo │   0 │    1 │ DESVIO   │  │
+│  └──────────────────────────────────────────────────────┘  │
+│                                                             │
+│  ═══ Tab 3: Ligações vs Domicílios ═══════════════════     │
+│                                                             │
+│  ┌──────────────────────────────────────────────────────┐  │
+│  │ Município    │ Tipo   │ Domic.│ Ligações│ Δ  │Status │  │
+│  │              │        │ (KML) │ (JSON)  │    │       │  │
+│  │──────────────┼────────┼───────┼─────────┼────┼───────│  │
+│  │ Adamantina   │ Esgoto │    46 │     46  │  0 │ OK    │  │
+│  │ Adamantina   │ Água   │    46 │     46  │  0 │ OK    │  │
+│  └──────────────────────────────────────────────────────┘  │
+│                                                             │
+│  ═══ Tab 4: Detalhes por Município ═══════════════════     │
+│                                                             │
+│  Município selecionado: [Adamantina]                       │
+│                                                             │
+│  ┌─── Gráfico barras lado-a-lado: KML vs JSON ──────────┐ │
+│  │  CT PVC 150  ████████ 866m  ████████ 866m             │ │
+│  │  RC PVC 150  █████████ 915m █████████ 915m            │ │
+│  │  RD PEAD 63  ████████ 921m  ████████ 921m             │ │
+│  │  AD PEAD 110 ██████████████████ 1787m  same           │ │
+│  └───────────────────────────────────────────────────────┘ │
+│                                                             │
+│  ┌─── Exportar ──────────────────────────────────────────┐ │
+│  │  [Download CSV desvios]  [Download relatório completo] │ │
+│  └───────────────────────────────────────────────────────┘ │
+└─────────────────────────────────────────────────────────────┘
 ```
 
----
+## Etapas de Implementação
 
-### 3. `pages/2_Equipamentos.py` — Equipamentos
-
-**Antes:** 8 metrics em 2 linhas sem borda → grafico → selectbox → tabela
-**Depois:** KPIs agrupados → tabela-resumo rica → graficos → detalhe
-
-```
-KPIs (container border):
-  2 rows de 4 metrics com border=True
-
-Resumo por Tipo:
-  st.table com border="horizontal"
-  Tipo | Icone | Quantidade
-  (usar emojis: ETE=🏭 Reservatorio=💧 Poco=🔵 EEE=⚡ etc)
-
-Grafico equipamentos por tipo
-
-Detalhar (selectbox mantido):
-  st.dataframe dentro de container com borda
-```
-
----
-
-### 4. `pages/3_Areas.py` — Areas de Expansao
-
-**Antes:** 4 metrics → 4 graficos → tabela
-**Depois:** KPIs com border → tabela prioridades com badges → graficos → tabela
-
-```
-KPIs (container border):
-  4 metrics com border=True
-
-Resumo por Prioridade:
-  st.table com border="horizontal"
-  Prioridade (badge cor) | Qtd | Domicilios | Area (km2)
-
-Graficos (empilhados)
-
-Tabela Detalhada
-```
-
----
-
-### 5. `pages/4_Elevacao.py` — Elevacao
-
-**Antes:** 4 metrics → graficos → perfil → tabela problemas
-**Depois:** KPIs com semaforo → graficos → perfil → tabela com badges
-
-```
-KPIs (container border):
-  4 metrics com border=True e delta_color para status
-  Adequados = verde, Insuficiente = laranja, Contra-fluxo = vermelho
-
-Graficos (empilhados)
-
-Perfil Longitudinal (mantido)
-
-Trechos com Problemas:
-  st.dataframe com caption
-```
-
----
-
-### 6. `pages/5_Verificacoes.py` — Verificacoes Normativas
-
-**Antes:** Metrics → graficos → tabela (PV) → metrics → grafico → tabela (ETE)
-**Depois:** 2 blocos claros com containers bordados
-
-```
-BLOCO PV (container border):
-  Titulo + st.caption explicando NBR 9649
-  KPIs com badges: Adequado=verde Aceitavel=amarelo Excede=vermelho
-  Graficos
-  Tabela excedentes com badge de status
-
-BLOCO ETE (container border):
-  Titulo + st.caption explicando Manning
-  KPIs com badges
-  Grafico
-  Tabela ETE
-```
-
----
-
-### 7. `pages/7_QA_QC.py` — Qualidade
-
-**Antes:** Blocos separados por `st.markdown('---')` → dataframes crus
-**Depois:** Cards de verificacao com containers bordados + tabela-resumo final rica
-
-```
-Cada verificacao em container(border=True):
-  - Titulo + badge de status (OK/Atencao/Critico)
-  - Metric + descricao
-  - Tabela so se houver problemas
-
-Resumo Final:
-  st.table com border="horizontal"
-  Verificacao | Ocorrencias | Status (badge com emoji)
-  - 🟢 OK | 🟡 Atencao | 🔴 Critico
-
-Indice de Qualidade:
-  st.metric com border=True
-```
-
----
-
-### 8. `pages/6_Mapa.py` — Mapa (mudancas menores)
-
-```
-Legenda com st.container(horizontal=True) + badges coloridos
-(substituir st.caption por badges visuais)
-```
-
----
-
-### 9. `pages/8_Downloads.py` — Downloads (ja reformulado, ajustes finos)
-
-```
-Cada opcao em container(border=True) ao inves de layout empilhado puro
-Badge com tipo: "Gerencial" | "Analitico" | "Excel"
-```
-
----
-
-## Componentes Streamlit a Utilizar
-
-| Componente | Uso |
-|---|---|
-| `st.metric(border=True)` | Todos os KPIs |
-| `st.container(border=True)` | Agrupar blocos semanticos |
-| `st.table(border="horizontal")` | Tabelas-resumo pequenas (ate ~15 linhas) |
-| `st.badge("OK", icon=":material/check:")` | Status inline |
-| `st.columns(border=True)` | KPI rows com borda |
-| `st.caption` | Contexto descritivo abaixo de titulos |
-| Emojis em st.table | Status visual (🟢🟡🔴) |
-| `st.container(horizontal=True)` | Legendas e badges em linha |
-
-## Ordem de Implementacao
-
-1. **app.py** — Dashboard principal (impacto maximo)
-2. **pages/5_Verificacoes.py** — Verificacoes (mais complexa, mais dados)
-3. **pages/2_Equipamentos.py** — Equipamentos
-4. **pages/1_Redes.py** — Redes
-5. **pages/3_Areas.py** — Areas
-6. **pages/7_QA_QC.py** — QA/QC
-7. **pages/4_Elevacao.py** — Elevacao
-8. **pages/6_Mapa.py** + **pages/8_Downloads.py** — Ajustes finais
+1. `modulos/parser_json.py` — Parser dos JSONs
+2. `modulos/comparador.py` — Motor de comparação
+3. `pages/9_Comparacao.py` — Página Streamlit
+4. Atualizar `app.py` — Incluir menção na tabela de páginas
