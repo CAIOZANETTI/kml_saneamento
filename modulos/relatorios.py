@@ -383,8 +383,8 @@ def mapa_redes(df: pd.DataFrame) -> pdk.Deck:
     )
 
 
-def mapa_equipamentos(df: pd.DataFrame) -> pdk.Deck:
-    """Mapa com equipamentos pontuais coloridos por subtipo."""
+def mapa_localizada(df: pd.DataFrame) -> pdk.Deck:
+    """Mapa com localizada (equipamentos pontuais) coloridos por subtipo."""
     if df.empty:
         return None
 
@@ -409,7 +409,7 @@ def mapa_equipamentos(df: pd.DataFrame) -> pdk.Deck:
         data=dados_mapa,
         get_position='position',
         get_fill_color='color',
-        get_radius=500,
+        get_radius=80,
         pickable=True,
     )
 
@@ -475,7 +475,7 @@ def mapa_completo(df_linear: pd.DataFrame, df_pontual: pd.DataFrame,
             layers.append(pdk.Layer(
                 'ScatterplotLayer', data=dados_equip,
                 get_position='position', get_fill_color='color',
-                get_radius=600, pickable=True,
+                get_radius=80, pickable=True,
             ))
 
     if not todas_coords:
