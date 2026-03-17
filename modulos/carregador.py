@@ -3,6 +3,7 @@ carregador.py — Carregamento e filtragem de dados compartilhados entre página
 
 Centraliza a lógica de carregar KMLs, aplicar elevação pré-computada,
 e filtrar via sidebar para uso em todas as páginas do app multipage.
+A seleção de lotes/fonte é feita na página inicial e travada via session_state.
 """
 
 import os
@@ -96,7 +97,6 @@ def _exibir_cabecalho_fixo(lotes_sel, recorte_sel, df_linear):
     if not lotes_sel and not recorte_sel:
         return
 
-    # Calcular métricas
     ext_total = df_linear['extensao_calculada_m'].sum() / 1000 if not df_linear.empty else 0
     n_mun = df_linear['nm_mun'].nunique() if not df_linear.empty and 'nm_mun' in df_linear.columns else 0
     ext_agua = df_linear[df_linear['tipo'] == 'Água']['extensao_calculada_m'].sum() / 1000 if not df_linear.empty else 0
@@ -123,43 +123,55 @@ def _exibir_cabecalho_fixo(lotes_sel, recorte_sel, df_linear):
 
 def configurar_sidebar_e_dados():
     """
-    Configura sidebar com fonte de dados e filtros.
+    Configura sidebar com filtros (sem seleção de lote/fonte).
+    Lotes e fonte de dados são definidos na página inicial via session_state.
     Retorna (df_linear, df_pontual, df_areas) ou faz st.stop().
     """
+    # Verificar se a análise foi configurada na página inicial
+    if not st.session_state.get('_dados_configurados'):
+        st.warning('Configure a analise na pagina inicial antes de continuar.')
+        if st.button('Ir para pagina inicial'):
+            st.switch_page('app.py')
+        st.stop()
+
+    fonte = st.session_state.get('_fonte_dados', 'Arquivos de exemplo')
+    lotes_configurados = st.session_state.get('_lotes_configurados', [])
+
+    # Sidebar — título e info dos lotes selecionados
     st.sidebar.markdown(
         '<h2 style="margin-bottom:0">Concepção Saneamento</h2>',
         unsafe_allow_html=True,
     )
     st.sidebar.caption('Diagnóstico de obras de saneamento a partir de KML')
 
-    fonte = st.sidebar.radio(
-        'Fonte de dados',
-        ['Arquivos de exemplo', 'Upload próprio'],
-    )
+    # Mostrar lotes ativos (read-only)
+    lotes_txt = ', '.join(lotes_configurados)
+    st.sidebar.info(f'**Lotes:** {lotes_txt}')
+    if st.sidebar.button('Alterar lotes', use_container_width=True):
+        st.switch_page('app.py')
 
+    st.sidebar.markdown('---')
+
+    # Carregar dados
     dados = None
-    lotes_disponiveis = []
     usa_exemplo = False
 
     if fonte == 'Arquivos de exemplo':
-        dados, lotes_disponiveis = _carregar_exemplos()
+        dados, _ = _carregar_exemplos()
         usa_exemplo = True
         if dados is None:
-            st.sidebar.warning('Nenhum KML encontrado em data/kml/')
+            st.error('Nenhum KML encontrado em data/kml/')
+            st.stop()
     else:
-        arquivos_upload = st.sidebar.file_uploader(
-            'Enviar arquivos KML',
-            type=['kml'],
-            accept_multiple_files=True,
-        )
+        arquivos_upload = st.session_state.get('_arquivos_upload')
         if arquivos_upload:
             nomes_up = [f.name.replace('.kml', '') for f in arquivos_upload]
             dados = _processar_uploads(arquivos_upload, nomes_up)
-            lotes_disponiveis = nomes_up
-
-    if dados is None:
-        st.info('Selecione uma fonte de dados na barra lateral.')
-        st.stop()
+        if dados is None:
+            st.error('Dados de upload não encontrados. Reconfigure na página inicial.')
+            if st.button('Ir para pagina inicial'):
+                st.switch_page('app.py')
+            st.stop()
 
     df_linear = dados['linear']
     df_pontual = dados['pontual']
@@ -169,23 +181,16 @@ def configurar_sidebar_e_dados():
     if usa_exemplo and 'elevacao_montante_m' not in df_linear.columns:
         df_linear = _aplicar_elevacao_precomputada(df_linear)
 
-    # Filtro de lotes — persistido via session_state
-    lotes_sel = []
-    if lotes_disponiveis and 'lote' in df_linear.columns:
-        lotes_sel = st.sidebar.multiselect(
-            'Lotes',
-            lotes_disponiveis,
-            default=st.session_state.get('_lotes_sel', []),
-            key='_lotes_sel',
-        )
-        if lotes_sel:
-            df_linear = df_linear[df_linear['lote'].isin(lotes_sel)]
-            if 'lote' in df_pontual.columns:
-                df_pontual = df_pontual[df_pontual['lote'].isin(lotes_sel)]
-            if 'lote' in df_areas.columns:
-                df_areas = df_areas[df_areas['lote'].isin(lotes_sel)]
+    # Aplicar filtro de lotes (travado pela página inicial)
+    lotes_sel = lotes_configurados
+    if lotes_sel and 'lote' in df_linear.columns:
+        df_linear = df_linear[df_linear['lote'].isin(lotes_sel)]
+        if 'lote' in df_pontual.columns:
+            df_pontual = df_pontual[df_pontual['lote'].isin(lotes_sel)]
+        if 'lote' in df_areas.columns:
+            df_areas = df_areas[df_areas['lote'].isin(lotes_sel)]
 
-    # Filtro Recorte (Formal / Rural) — persistido via session_state
+    # Filtro Recorte (Formal / Rural)
     recorte_sel = None
     if 'recorte' in df_areas.columns:
         recortes_disp = sorted(df_areas['recorte'].dropna().unique())
@@ -199,12 +204,10 @@ def configurar_sidebar_e_dados():
                 key='_recorte_sel',
             )
             if recorte_sel and recorte_sel != 'Todos':
-                # Filtrar áreas pelo recorte
                 ae_ids_filtradas = set(
                     df_areas[df_areas['recorte'] == recorte_sel]['ae_id'].dropna().unique()
                 )
                 df_areas = df_areas[df_areas['recorte'] == recorte_sel]
-                # Filtrar linear e pontual pelos ae_ids das áreas filtradas
                 if 'ae_id' in df_linear.columns and ae_ids_filtradas:
                     df_linear = df_linear[df_linear['ae_id'].isin(ae_ids_filtradas)]
                 if 'ae_id' in df_pontual.columns and ae_ids_filtradas:
@@ -213,7 +216,6 @@ def configurar_sidebar_e_dados():
                 recorte_sel = None
 
     # Filtros gerais
-    st.sidebar.markdown('---')
     st.sidebar.subheader('Filtros')
 
     municipios = sorted(df_linear['nm_mun'].dropna().unique()) if 'nm_mun' in df_linear.columns else []
