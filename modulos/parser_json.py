@@ -53,7 +53,7 @@ _RE_TRAV = re.compile(
 
 def carregar_json(lote_num: int | str) -> dict | None:
     """Carrega JSON de orcamento para um lote."""
-    num = str(lote_num).replace('Lote ', '').replace('lote ', '').strip()
+    num = str(lote_num).replace('Lote_', '').replace('Lote ', '').replace('lote_', '').replace('lote ', '').strip()
     caminho = _DIR_JSON / f'sabesp_{num}.json'
     if not caminho.exists():
         return None
@@ -224,8 +224,7 @@ def extrair_quantitativos_todos(lotes: list[str]) -> dict[str, dict[str, dict]]:
     """
     resultado = {}
     for lote in lotes:
-        num = lote.replace('Lote ', '').replace('lote ', '').strip()
-        dados = carregar_json(num)
+        dados = carregar_json(lote)
         if dados:
             resultado[lote] = extrair_quantitativos(dados)
     return resultado
