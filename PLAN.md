@@ -1,230 +1,368 @@
-# Plano de Redesign UX — Concepcao de Saneamento
+# Plano: Comparacao KML vs JSON + 3 HTMLs + Pagina Streamlit
 
-## Diagnostico Atual
+## Contexto
 
-O sistema tem **dados ricos** mas apresentacao **dispersa e amadora**:
-- Metrics soltos sem bordas nem agrupamento visual
-- Texto puro (`st.info`) para resumo — nao conta historia
-- Graficos sem contexto narrativo (titulo solto → grafico → proximo)
-- Tabelas com `st.dataframe` generico sem formatacao visual
-- Headers com `unsafe_allow_html` — pode usar markdown nativo
-- Paginas sao listas verticais sem secoes claras
-- Nenhum uso de `st.container(border=True)`, `st.badge`, `st.table` com emojis/cores
+Cada lote possui dois documentos:
+- **KML** (`data/kml/Lote_XX.kml`): Dados geoespaciais (redes, equipamentos, areas)
+- **JSON** (`data/json/sabesp_XX.json`): Planilha orcamentaria com quantitativos
 
-## Principios de Design
-
-1. **Hierarquia visual**: KPIs no topo com `st.metric(border=True)` → contexto narrativo → graficos → tabelas
-2. **Agrupamento semantico**: `st.container(border=True)` para agrupar blocos relacionados
-3. **Contadores com indicadores**: `st.badge` para status (OK/Atencao/Critico) e categorias
-4. **Tabelas ricas**: `st.table(border="horizontal")` com emojis de status para tabelas-resumo pequenas
-5. **Narrativa**: cada secao abre com 1 frase de contexto antes dos dados
-6. **Menos e melhor**: reduzir graficos redundantes, combinar informacao
-
-## Mudancas por Pagina
+Objetivo: cruzar KML x JSON, identificar desvios, e gerar 3 HTMLs para download.
 
 ---
 
-### 1. `app.py` — Dashboard Principal (Home)
+## Arquivos a Criar/Modificar
 
-**Antes:** 8 metrics soltos → texto `st.info` → 2 graficos → tabela municipios
-**Depois:** Dashboard executivo que conta a historia
-
-```
-HEADER: st.title com st.caption (sem unsafe_html)
-
-BLOCO 1 — KPIs Principais (container com borda):
-  Row de 4 metrics com border=True:
-  - Extensao Total (km) — sem delta
-  - Municipios
-  - Equipamentos
-  - Areas de Expansao
-
-BLOCO 2 — Composicao das Redes (container com borda):
-  Row de 2 metrics: Agua (km) + Esgoto (km)
-  Row de 2 metrics: ETEs + Pocos
-  st.caption com % agua vs esgoto
-
-BLOCO 3 — Resumo (st.info substituido por container):
-  Texto narrativo formatado (markdown, nao info box)
-
-BLOCO 4 — Graficos (dentro de containers com titulo):
-  Grafico material
-  Grafico DN
-
-BLOCO 5 — Top Municipios:
-  st.table com border="horizontal" (nao dataframe)
-  Colunas com emojis e badges
-```
+| Arquivo | Acao | Descricao |
+|---------|------|-----------|
+| `modulos/parser_json.py` | CRIAR | Parser dos JSONs de orcamento |
+| `modulos/comparador.py` | CRIAR | Logica de comparacao KML x JSON + agregacao materiais |
+| `modulos/memorial.py` | MODIFICAR | +3 funcoes HTML |
+| `pages/9_Comparacao.py` | CRIAR | Pagina Streamlit de comparacao interativa |
+| `pages/8_Downloads.py` | MODIFICAR | +3 botoes de download |
 
 ---
 
-### 2. `pages/1_Redes.py` — Diagnostico de Redes
+## Etapas de Implementacao
 
-**Antes:** Titulo → 3 graficos soltos → tabela detalhada
-**Depois:** KPIs contextuais → resumo tabular rico → graficos com narrativa → tabela
+### Etapa 1: `modulos/parser_json.py`
+- `carregar_json(lote_num)` — carrega JSON do lote
+- `extrair_quantitativos(json_data)` — retorna por municipio: redes, equipamentos, ligacoes
+- `extrair_cabecalho(json_data)` — dados do cabecalho
+- Siglas: CT→Coletor Tronco, RC→Rede Coletora, RD→Rede de Distribuicao, AD→Adutora, LR→Linha de Recalque
 
-```
-KPIs (container border):
-  4 metrics: Trechos Total | Extensao (km) | Materiais distintos | DN medio
+### Etapa 2: `modulos/comparador.py`
+- `comparar_municipios()` — presenca/ausencia
+- `comparar_redes()` — extensao KML vs JSON FORN por tipo
+- `comparar_equipamentos()` — contagem KML vs JSON
+- `comparar_ligacoes()` — domicilios KML vs ligacoes JSON
+- `gerar_score_consistencia()` — score geral com semaforo
+- `agregar_materiais_para_cotacao()` — agrupa KML por material+DN+subtipo
 
-Resumo por Subtipo:
-  st.table com border="horizontal", colunas com formatacao
-  Subtipo | Tipo (badge agua/esgoto) | Extensao | Trechos
+### Etapa 3: `modulos/memorial.py` — 3 funcoes HTML
+- `gerar_html_comparacao()`
+- `gerar_html_questionamentos()`
+- `gerar_html_cotacao_fornecedores()`
 
-Graficos (cada um com titulo contextual):
-  - Extensao por subtipo
-  - Extensao por municipio
-  - Extensao por metodo construtivo
-
-Tabela Detalhada (com titulo e st.caption descritivo):
-  st.dataframe (mantido, mas com caption explicativo)
-```
-
----
-
-### 3. `pages/2_Equipamentos.py` — Equipamentos
-
-**Antes:** 8 metrics em 2 linhas sem borda → grafico → selectbox → tabela
-**Depois:** KPIs agrupados → tabela-resumo rica → graficos → detalhe
-
-```
-KPIs (container border):
-  2 rows de 4 metrics com border=True
-
-Resumo por Tipo:
-  st.table com border="horizontal"
-  Tipo | Icone | Quantidade
-  (usar emojis: ETE=🏭 Reservatorio=💧 Poco=🔵 EEE=⚡ etc)
-
-Grafico equipamentos por tipo
-
-Detalhar (selectbox mantido):
-  st.dataframe dentro de container com borda
-```
+### Etapa 4: `pages/9_Comparacao.py`
+### Etapa 5: `pages/8_Downloads.py` — +3 botoes
 
 ---
 
-### 4. `pages/3_Areas.py` — Areas de Expansao
-
-**Antes:** 4 metrics → 4 graficos → tabela
-**Depois:** KPIs com border → tabela prioridades com badges → graficos → tabela
+## MOCKUP HTML 1: Comparacao KML x JSON
 
 ```
-KPIs (container border):
-  4 metrics com border=True
+┌─────────────────────────────────────────────────────────────┐
+│  ██  COMPARACAO KML x ORCAMENTO (JSON)                      │
+│  Concepcao de Saneamento — Analise de Desvios               │
+│  Lotes: 13, 14 | Gerado em 17/03/2026 14:30                │
+│  ░░ Documento de Comparacao ░░                               │
+└─────────────────────────────────────────────────────────────┘
 
-Resumo por Prioridade:
-  st.table com border="horizontal"
-  Prioridade (badge cor) | Qtd | Domicilios | Area (km2)
+═══ 1. RESUMO DA COMPARACAO ═══
 
-Graficos (empilhados)
+┌──────────────┐ ┌──────────────┐ ┌──────────────┐ ┌──────────────┐
+│ ITENS KML    │ │ ITENS JSON   │ │ COINCIDENTES │ │ DESVIOS      │
+│    1.245     │ │    854       │ │    612       │ │    487       │
+│ trechos+equip│ │ itens orcam. │ │ cruzados     │ │ a resolver   │
+└──────────────┘ └──────────────┘ └──────────────┘ └──────────────┘
 
-Tabela Detalhada
+═══ 2. DESVIOS POR LOTE ═══
+
+  LOTE 13 — PACOTE 13 - ONDA 2
+  ┌─────────────────────────────────────────────────────────┐
+  │ Tipo Desvio       │ Qtd │ Descricao                    │
+  ├───────────────────┼─────┼──────────────────────────────┤
+  │ Municipio so JSON │   5 │ Sem geometria no KML         │
+  │ Rede so KML       │  23 │ Trechos sem item orcament.   │
+  │ Rede so JSON      │  15 │ Itens orcados sem KML        │
+  │ DN divergente     │   8 │ Diametro KML ≠ JSON          │
+  │ Extensao dif.     │  12 │ Extensao KML vs qtd JSON     │
+  └─────────────────────────────────────────────────────────┘
+
+═══ 3. COMPARACAO DE REDES POR SUBTIPO ═══
+
+  ┌──────────────────────────────────────────────────────────────┐
+  │ Subtipo         │ KML (km) │ JSON (km) │ Diferenca │ Status │
+  ├─────────────────┼──────────┼───────────┼───────────┼────────┤
+  │ Rede Coletora   │  124,3   │   121,0   │   +3,3    │Atencao │
+  │ Coletor Tronco  │   45,2   │    45,2   │    0,0    │  OK    │
+  │ Rede Distrib.   │   89,1   │    92,0   │   -2,9    │Atencao │
+  │ Adutora         │   12,5   │    12,5   │    0,0    │  OK    │
+  └──────────────────────────────────────────────────────────────┘
+
+═══ 4. COMPARACAO DE EQUIPAMENTOS ═══
+
+  ┌──────────────────────────────────────────────────────────────┐
+  │ Equip.     │ KML │ JSON │ Obs                               │
+  ├────────────┼─────┼──────┼───────────────────────────────────┤
+  │ ETE        │  12 │   12 │ OK                                │
+  │ EEE        │  35 │   33 │ 2 elevatorias sem orcamento       │
+  │ Reservat.  │  18 │   20 │ 2 reservatorios orcados sem KML   │
+  └──────────────────────────────────────────────────────────────┘
+
+═══ 5. DETALHAMENTO POR MUNICIPIO (tabela filtravel) ═══
+
+  [Filtrar Lote] [Filtrar Municipio] [Filtrar Status]
+  ┌──────────────────────────────────────────────────────────────┐
+  │ Lote │ Municipio  │ Item        │ KML    │ JSON   │ Status  │
+  ├──────┼────────────┼─────────────┼────────┼────────┼─────────┤
+  │ 13   │ Adamantina │ RC PVC 150  │ 915 m  │ 915 m  │ OK      │
+  │ 13   │ Adamantina │ CT PVC 150  │ 866 m  │ 866 m  │ OK      │
+  │ 13   │ Assis      │ CT PVC 150  │ 850 m  │ 863 m  │ Desvio  │
+  └──────────────────────────────────────────────────────────────┘
+
+  ─── Gerado automaticamente em 17/03/2026 ───
 ```
 
 ---
 
-### 5. `pages/4_Elevacao.py` — Elevacao
-
-**Antes:** 4 metrics → graficos → perfil → tabela problemas
-**Depois:** KPIs com semaforo → graficos → perfil → tabela com badges
+## MOCKUP HTML 2: Questionamentos ao Cliente
 
 ```
-KPIs (container border):
-  4 metrics com border=True e delta_color para status
-  Adequados = verde, Insuficiente = laranja, Contra-fluxo = vermelho
+┌─────────────────────────────────────────────────────────────┐
+│  ██  QUESTIONAMENTOS AO CLIENTE                              │
+│  Concepcao de Saneamento — Desvios por Lote                  │
+│  Lotes: 13, 14 | Gerado em 17/03/2026 14:30                │
+│  ░░ Documento para Validacao ░░                              │
+└─────────────────────────────────────────────────────────────┘
 
-Graficos (empilhados)
+  Prezado(a),
 
-Perfil Longitudinal (mantido)
+  Apos analise tecnica da concepcao de saneamento, identificamos
+  os seguintes desvios que requerem esclarecimento da SABESP.
 
-Trechos com Problemas:
-  st.dataframe com caption
+═══ LOTE 13 — PACOTE 13 - ONDA 2 ═══
+
+  ┌ QUESTAO 1 — Municipios sem geometria KML (5 municipios) ──┐
+  │                                                             │
+  │ Os seguintes municipios constam no orcamento (JSON) mas     │
+  │ nao possuem dados geoespaciais no KML:                      │
+  │                                                             │
+  │ • Cruzalia                                                  │
+  │ • Inubia Paulista                                           │
+  │ • Osvaldo Cruz                                              │
+  │ • Pracinha                                                  │
+  │ • Santopolis do Aguapei                                     │
+  │                                                             │
+  │ Solicitamos: Confirmar se estes municipios serao incluidos  │
+  │ na concepcao ou removidos do orcamento.                     │
+  └─────────────────────────────────────────────────────────────┘
+  Resposta: ____________________________________________
+
+  ┌ QUESTAO 2 — Redes sem item orcamentario (23 trechos) ─────┐
+  │                                                             │
+  │ Trechos no KML sem correspondencia no orcamento:            │
+  │                                                             │
+  │ • 12x Rede Coletora PVC DN150 (total 2.340m)               │
+  │ •  8x Rede Distrib. PVC DN110 (total 1.120m)               │
+  │ •  3x Coletor Tronco FoFo DN300 (total 890m)               │
+  │                                                             │
+  │ Solicitamos: Incluir no orcamento ou remover da concepcao?  │
+  └─────────────────────────────────────────────────────────────┘
+  Resposta: ____________________________________________
+
+  ┌ QUESTAO 3 — Itens orcados sem geometria (15 itens) ───────┐
+  │                                                             │
+  │ Itens no orcamento sem representacao no KML:                │
+  │                                                             │
+  │ • 8 itens de tubulacao (extensao orcada: 3.200m)            │
+  │ • 5 itens de equipamentos eletricos                         │
+  │ • 2 reservatorios (vol. projetado: 500 m3 cada)             │
+  │                                                             │
+  │ Solicitamos: Indicar localizacao ou confirmar exclusao.     │
+  └─────────────────────────────────────────────────────────────┘
+  Resposta: ____________________________________________
+
+  ┌ QUESTAO 4 — Elevatorias sem orcamento (2 EEEs) ───────────┐
+  │                                                             │
+  │ • EEE-14: Vazao 12,5 L/s | AMT 18,3 mca | 15 CV           │
+  │ • EEE-22: Vazao 8,0 L/s  | AMT 12,0 mca | 10 CV           │
+  │                                                             │
+  │ Solicitamos: Incluir no orcamento? Confirmar especificacoes.│
+  └─────────────────────────────────────────────────────────────┘
+  Resposta: ____________________________________________
+
+═══ LOTE 14 — PACOTE 14 - ONDA 2 ═══
+  (mesma estrutura, repete por lote com seus desvios)
+
+═══ RESUMO DE QUESTOES PENDENTES ═══
+
+  ┌───────────┬───────────┬────────────┐
+  │ Lote      │ Questoes  │ Prioridade │
+  ├───────────┼───────────┼────────────┤
+  │ Lote 13   │     4     │   Alta     │
+  │ Lote 14   │     2     │   Media    │
+  └───────────┴───────────┴────────────┘
+
+  Aguardamos retorno ate __/__/2026.
+  ─── Gerado automaticamente em 17/03/2026 ───
 ```
 
 ---
 
-### 6. `pages/5_Verificacoes.py` — Verificacoes Normativas
-
-**Antes:** Metrics → graficos → tabela (PV) → metrics → grafico → tabela (ETE)
-**Depois:** 2 blocos claros com containers bordados
+## MOCKUP HTML 3: Cotacao para Fornecedores
 
 ```
-BLOCO PV (container border):
-  Titulo + st.caption explicando NBR 9649
-  KPIs com badges: Adequado=verde Aceitavel=amarelo Excede=vermelho
-  Graficos
-  Tabela excedentes com badge de status
+┌─────────────────────────────────────────────────────────────┐
+│  ██  SOLICITACAO DE COTACAO — MATERIAIS E EQUIPAMENTOS      │
+│  Concepcao de Saneamento — SABESP                            │
+│  Lotes: 13, 14 | Gerado em 17/03/2026 14:30                │
+│  ░░ Documento para Fornecedores ░░                           │
+└─────────────────────────────────────────────────────────────┘
 
-BLOCO ETE (container border):
-  Titulo + st.caption explicando Manning
-  KPIs com badges
-  Grafico
-  Tabela ETE
+  Prezado Fornecedor,
+
+  Solicitamos cotacao para os materiais e equipamentos abaixo,
+  referentes a concepcao de obras de saneamento basico
+  (concessao SABESP — lotes 13, 14).
+
+  Prazo para retorno: __/__/2026
+  Condicoes: CIF obra | Prazo pgto: 30/60/90 DDL
+
+═══ 1. TUBULACOES — PVC ═══
+
+  ┌──────────────────────────────────────────────────────────────┐
+  │ Item│ Descricao              │ DN (mm) │ Extensao (m) │ Obs │
+  ├─────┼────────────────────────┼─────────┼──────────────┼─────┤
+  │  1  │ Tubo PVC p/ Rede Colet │   150   │   45.230     │ VCA │
+  │  2  │ Tubo PVC p/ Rede Colet │   200   │   12.450     │ VCA │
+  │  3  │ Tubo PVC p/ Rede Distr │   110   │   28.900     │ VCA │
+  │  4  │ Tubo PVC p/ Rede Distr │   150   │    8.600     │ VCA │
+  │     │ SUBTOTAL PVC           │         │   95.180 m   │     │
+  └──────────────────────────────────────────────────────────────┘
+  Preco Unit. (R$/m): ________   Total (R$): ________
+
+═══ 2. TUBULACOES — PEAD ═══
+
+  ┌──────────────────────────────────────────────────────────────┐
+  │ Item│ Descricao              │ DN (mm) │ Extensao (m) │ Obs │
+  ├─────┼────────────────────────┼─────────┼──────────────┼─────┤
+  │  5  │ Tubo PEAD p/ Adutora   │   200   │    3.200     │ MND │
+  │  6  │ Tubo PEAD p/ Linha Rec │   110   │    1.800     │ MND │
+  │     │ SUBTOTAL PEAD          │         │    5.000 m   │     │
+  └──────────────────────────────────────────────────────────────┘
+
+═══ 3. TUBULACOES — FoFo ═══
+  (mesmo formato — Ferro Fundido com DN maiores)
+
+═══ 4. TUBULACOES — Concreto ═══
+  (mesmo formato)
+
+═══ 5. ELEVATORIAS DE ESGOTO (EEE) ═══
+
+  ┌──────────────────────────────────────────────────────────────┐
+  │ Item│ Nome   │ Municipio │ Vazao  │ AMT    │ Potencia │ Obs │
+  │     │        │           │ (L/s)  │ (mca)  │ (CV)     │     │
+  ├─────┼────────┼───────────┼────────┼────────┼──────────┼─────┤
+  │  1  │ EEE-01 │ Campinas  │  12,5  │  18,3  │   15     │     │
+  │  2  │ EEE-02 │ Sumare    │   8,0  │  12,0  │   10     │     │
+  │  3  │ EEE-03 │ Paulinia  │  25,0  │  22,5  │   30     │     │
+  └──────────────────────────────────────────────────────────────┘
+  Espec.: Conjunto motobomba submersivel, motor WEG ou equiv.,
+  selo mecanico, painel eletrico, guia de remocao.
+
+═══ 6. RESERVATORIOS ═══
+
+  ┌──────────────────────────────────────────────────────────────┐
+  │ Item│ Nome    │ Municipio │ Volume (m3) │ Tipo     │ Obs    │
+  ├─────┼─────────┼───────────┼─────────────┼──────────┼────────┤
+  │  1  │ RAP-01  │ Campinas  │    500      │ Apoiado  │        │
+  │  2  │ REL-02  │ Sumare    │  1.000      │ Elevado  │ torre  │
+  └──────────────────────────────────────────────────────────────┘
+
+═══ 7. ETEs — ESTACOES DE TRATAMENTO ═══
+
+  ┌──────────────────────────────────────────────────────────────┐
+  │ Item│ Nome    │ Municipio │ Vazao (L/s) │ Volume (m3) │ Obs │
+  ├─────┼─────────┼───────────┼─────────────┼─────────────┼─────┤
+  │  1  │ ETE-01  │ Campinas  │    45,0     │   2.500     │     │
+  └──────────────────────────────────────────────────────────────┘
+
+═══ 8. POCOS PROFUNDOS ═══
+
+  ┌──────────────────────────────────────────────────────────────┐
+  │ Item│ Nome    │ Municipio │ Vazao (L/s) │ Obs               │
+  ├─────┼─────────┼───────────┼─────────────┼───────────────────┤
+  │  1  │ PP-01   │ Campinas  │    5,0      │                   │
+  └──────────────────────────────────────────────────────────────┘
+
+═══ RESUMO GERAL ═══
+
+  ┌──────────────────────────────────────────────────────────┐
+  │ Categoria          │ Qtd/Extensao │ Unidade             │
+  ├────────────────────┼──────────────┼─────────────────────┤
+  │ Tubulacao PVC      │   95.180     │ metros              │
+  │ Tubulacao PEAD     │    5.000     │ metros              │
+  │ Tubulacao FoFo     │   12.300     │ metros              │
+  │ Tubulacao Concreto │    3.200     │ metros              │
+  │ Elevatorias (EEE)  │       35     │ conjuntos           │
+  │ Reservatorios      │       18     │ unidades            │
+  │ ETEs               │       12     │ unidades            │
+  │ Pocos Profundos    │        8     │ unidades            │
+  └──────────────────────────────────────────────────────────┘
+
+  Contato: ________________  |  E-mail: ________________
+  ─── Gerado automaticamente em 17/03/2026 ───
 ```
 
 ---
 
-### 7. `pages/7_QA_QC.py` — Qualidade
-
-**Antes:** Blocos separados por `st.markdown('---')` → dataframes crus
-**Depois:** Cards de verificacao com containers bordados + tabela-resumo final rica
+## MOCKUP Pagina Streamlit: `pages/9_Comparacao.py`
 
 ```
-Cada verificacao em container(border=True):
-  - Titulo + badge de status (OK/Atencao/Critico)
-  - Metric + descricao
-  - Tabela so se houver problemas
-
-Resumo Final:
-  st.table com border="horizontal"
-  Verificacao | Ocorrencias | Status (badge com emoji)
-  - 🟢 OK | 🟡 Atencao | 🔴 Critico
-
-Indice de Qualidade:
-  st.metric com border=True
-```
-
----
-
-### 8. `pages/6_Mapa.py` — Mapa (mudancas menores)
-
-```
-Legenda com st.container(horizontal=True) + badges coloridos
-(substituir st.caption por badges visuais)
-```
-
----
-
-### 9. `pages/8_Downloads.py` — Downloads (ja reformulado, ajustes finos)
-
-```
-Cada opcao em container(border=True) ao inves de layout empilhado puro
-Badge com tipo: "Gerencial" | "Analitico" | "Excel"
+┌─────────────────────────────────────────────────────────────┐
+│  Comparacao KML vs JSON                                      │
+│  Consistencia entre concepcao e orcamento                    │
+├─────────────────────────────────────────────────────────────┤
+│                                                              │
+│  ┌─── Score de Consistencia ────────────────────────────┐   │
+│  │  [87%]  ████████████████████░░░                       │   │
+│  └───────────────────────────────────────────────────────┘   │
+│                                                              │
+│  ┌─ KPIs ────────────────────────────────────────────────┐  │
+│  │ Municipios     │ Redes         │ Equipam.  │ Ligacoes │  │
+│  │ KML:29 JSON:34 │ Desvio:3,2%   │ Match:85% │ OK:92%  │  │
+│  └───────────────────────────────────────────────────────┘   │
+│                                                              │
+│  Tab: [Municipios] [Redes] [Equipamentos] [Ligacoes]        │
+│                                                              │
+│  ═══ Redes Lineares ═══                                      │
+│  [Filtro Municipio] [Filtro Subtipo] [Filtro Status]         │
+│  ┌──────────────────────────────────────────────────────┐   │
+│  │ Municipio  │ Item       │ KML (m) │ JSON (m) │ Δ%   │   │
+│  │ Adamantina │ RC PVC 150 │  915    │   915    │  0%  │   │
+│  │ Assis      │ CT PVC 150 │  850    │   863    │ 1,5% │   │
+│  └──────────────────────────────────────────────────────┘   │
+│                                                              │
+│  ┌─── Grafico Desvios ─────────────────────────────────┐    │
+│  │  (Plotly bar chart: KML vs JSON por subtipo)         │    │
+│  └──────────────────────────────────────────────────────┘   │
+│                                                              │
+└─────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## Componentes Streamlit a Utilizar
+## Downloads atualizados (`8_Downloads.py`)
 
-| Componente | Uso |
-|---|---|
-| `st.metric(border=True)` | Todos os KPIs |
-| `st.container(border=True)` | Agrupar blocos semanticos |
-| `st.table(border="horizontal")` | Tabelas-resumo pequenas (ate ~15 linhas) |
-| `st.badge("OK", icon=":material/check:")` | Status inline |
-| `st.columns(border=True)` | KPI rows com borda |
-| `st.caption` | Contexto descritivo abaixo de titulos |
-| Emojis em st.table | Status visual (🟢🟡🔴) |
-| `st.container(horizontal=True)` | Legendas e badges em linha |
+Adicionar 3 novos containers apos os existentes:
 
-## Ordem de Implementacao
+```
+┌────────────────────────────────────────────────────────┐
+│  Comparacao KML x JSON               [Baixar .html]   │
+│  [Comparacao] badge laranja                            │
+│  Relatorio de desvios entre concepcao e orcamento.     │
+└────────────────────────────────────────────────────────┘
 
-1. **app.py** — Dashboard principal (impacto maximo)
-2. **pages/5_Verificacoes.py** — Verificacoes (mais complexa, mais dados)
-3. **pages/2_Equipamentos.py** — Equipamentos
-4. **pages/1_Redes.py** — Redes
-5. **pages/3_Areas.py** — Areas
-6. **pages/7_QA_QC.py** — QA/QC
-7. **pages/4_Elevacao.py** — Elevacao
-8. **pages/6_Mapa.py** + **pages/8_Downloads.py** — Ajustes finais
+┌────────────────────────────────────────────────────────┐
+│  Questionamentos ao Cliente           [Baixar .html]   │
+│  [Cliente] badge vermelho                              │
+│  Perguntas sobre desvios por lote, com campo resposta. │
+└────────────────────────────────────────────────────────┘
+
+┌────────────────────────────────────────────────────────┐
+│  Cotacao para Fornecedores            [Baixar .html]   │
+│  [Fornecedores] badge verde                            │
+│  Materiais e equipamentos com especificacoes tecnicas. │
+└────────────────────────────────────────────────────────┘
+```
