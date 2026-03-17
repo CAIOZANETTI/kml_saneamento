@@ -1064,3 +1064,730 @@ def gerar_memorial_analitico(df_linear: pd.DataFrame, df_pontual: pd.DataFrame,
 </body>
 </html>"""
     return html
+
+
+# ══════════════════════════════════════════════════════════════════
+#  HTML DE COMPARAÇÃO KML × JSON
+# ══════════════════════════════════════════════════════════════════
+
+def gerar_html_comparacao(resultados: dict) -> str:
+    """
+    Gera HTML com relatorio de desvios KML x JSON.
+
+    resultados: dict retornado por comparador.comparar_todos_lotes()
+    """
+    from modulos import comparador
+
+    agora = datetime.now().strftime('%d/%m/%Y %H:%M')
+    lotes_str = ', '.join(sorted(resultados.keys()))
+
+    # Consolidar DataFrames
+    all_redes = pd.concat([r['redes'] for r in resultados.values() if not r['redes'].empty],
+                          ignore_index=True) if resultados else pd.DataFrame()
+    all_equip = pd.concat([r['equipamentos'] for r in resultados.values() if not r['equipamentos'].empty],
+                          ignore_index=True) if resultados else pd.DataFrame()
+    all_mun = pd.concat([r['municipios'] for r in resultados.values() if not r['municipios'].empty],
+                        ignore_index=True) if resultados else pd.DataFrame()
+
+    # Score medio
+    scores = [r['score']['score'] for r in resultados.values()]
+    score_medio = sum(scores) / len(scores) if scores else 100
+
+    # KPIs
+    n_mun_ok = len(all_mun[all_mun['status'] == 'OK']) if not all_mun.empty else 0
+    n_mun_dev = len(all_mun[all_mun['status'] != 'OK']) if not all_mun.empty else 0
+    n_redes_ok = len(all_redes[all_redes['status'] == 'OK']) if not all_redes.empty else 0
+    n_redes_dev = len(all_redes[all_redes['status'] != 'OK']) if not all_redes.empty else 0
+    n_equip_ok = len(all_equip[all_equip['status'] == 'OK']) if not all_equip.empty else 0
+    n_equip_dev = len(all_equip[all_equip['status'] != 'OK']) if not all_equip.empty else 0
+
+    # Secoes por lote
+    secoes_lote = ''
+    for lote, dados in sorted(resultados.items()):
+        cab_json = ''
+        num = lote.replace('Lote ', '').strip()
+        from modulos.parser_json import carregar_json, extrair_cabecalho
+        jd = carregar_json(num)
+        if jd:
+            cab = extrair_cabecalho(jd)
+            cab_json = f' — {cab["objeto"]}'
+
+        sc = dados['score']
+        cor_score = 'verde' if sc['score'] >= 80 else ('alerta' if sc['score'] >= 50 else 'critico')
+
+        # Municipios divergentes
+        mun_dev = dados['municipios'][dados['municipios']['status'] != 'OK']
+        mun_html = ''
+        if not mun_dev.empty:
+            so_json = mun_dev[mun_dev['status'] == 'Só JSON']['nm_mun'].tolist()
+            so_kml = mun_dev[mun_dev['status'] == 'Só KML']['nm_mun'].tolist()
+            if so_json:
+                mun_html += f'<p class="descritivo"><strong>Presentes no JSON mas ausentes no KML:</strong> {", ".join(so_json)}</p>'
+            if so_kml:
+                mun_html += f'<p class="descritivo"><strong>Presentes no KML mas ausentes no JSON:</strong> {", ".join(so_kml)}</p>'
+
+        # Redes por subtipo (resumo)
+        redes_resumo = ''
+        if not dados['redes'].empty:
+            r_sub = dados['redes'].groupby('subtipo').agg(
+                kml_km=('extensao_kml_m', lambda x: x.sum() / 1000),
+                json_km=('extensao_json_m', lambda x: x.sum() / 1000),
+            ).reset_index()
+            r_sub['dif_km'] = r_sub['kml_km'] - r_sub['json_km']
+            r_sub['kml_km'] = r_sub['kml_km'].round(1)
+            r_sub['json_km'] = r_sub['json_km'].round(1)
+            r_sub['dif_km'] = r_sub['dif_km'].round(1)
+            r_sub.columns = ['Subtipo', 'KML (km)', 'JSON (km)', 'Diferenca (km)']
+            redes_resumo = _tabela(r_sub)
+
+        # Equipamentos resumo
+        equip_resumo = ''
+        if not dados['equipamentos'].empty:
+            eq = dados['equipamentos'].groupby('tipo_equip').agg(
+                qtd_kml=('qtd_kml', 'sum'),
+                qtd_json=('qtd_json', 'sum'),
+            ).reset_index()
+            eq['diferenca'] = eq['qtd_kml'] - eq['qtd_json']
+            eq.columns = ['Equipamento', 'KML', 'JSON', 'Diferenca']
+            equip_resumo = _tabela(eq)
+
+        # Tabela detalhada redes
+        redes_detalhe = ''
+        if not dados['redes'].empty:
+            df_det = dados['redes'][['nm_mun', 'sigla', 'dn_mm',
+                                      'extensao_kml_m', 'extensao_json_m',
+                                      'diferenca_pct', 'status']].copy()
+            df_det.columns = ['Municipio', 'Sigla', 'DN (mm)',
+                              'KML (m)', 'JSON (m)', 'Desvio (%)', 'Status']
+            redes_detalhe = _tabela(
+                df_det, max_linhas=300,
+                fmt_colunas={
+                    'KML (m)': lambda v: _fmt(v, 1),
+                    'JSON (m)': lambda v: _fmt(v, 1),
+                    'Status': _badge,
+                })
+
+        secoes_lote += f"""
+        <div class="secao">
+            <h2>{lote}{cab_json}</h2>
+            <div class="cards">
+                <div class="card {cor_score}">
+                    <div class="rotulo">Score Consistencia</div>
+                    <div class="valor-grande">{sc['score']:.0f}%</div>
+                </div>
+                <div class="card">
+                    <div class="rotulo">Redes</div>
+                    <div class="valor">{sc['score_redes']:.0f}%</div>
+                </div>
+                <div class="card">
+                    <div class="rotulo">Equipamentos</div>
+                    <div class="valor">{sc['score_equip']:.0f}%</div>
+                </div>
+                <div class="card">
+                    <div class="rotulo">Ligacoes</div>
+                    <div class="valor">{sc['score_lig']:.0f}%</div>
+                </div>
+            </div>
+
+            {f'<h3>Municipios Divergentes</h3>{mun_html}' if mun_html else ''}
+
+            <h3>Redes por Subtipo</h3>
+            {redes_resumo}
+
+            <h3>Equipamentos</h3>
+            {equip_resumo}
+
+            <h3>Detalhamento de Redes</h3>
+            {redes_detalhe}
+        </div>
+        """
+
+    html = f"""<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Comparacao KML x JSON — Concepcao de Saneamento</title>
+    <style>{_CSS_BASE}
+    .badge.ok {{ background: #E8F5E9; color: #2E7D32; }}
+    .badge.atencao {{ background: #FFF3E0; color: #EF6C00; }}
+    .badge.critico {{ background: #FFEBEE; color: #C62828; }}
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Comparacao KML x Orcamento (JSON)</h1>
+        <div class="subtitulo">Concepcao de Saneamento — Analise de Desvios</div>
+        <div class="meta">Lotes: {lotes_str} | Gerado em {agora}</div>
+        <div class="tipo-doc">Documento de Comparacao</div>
+    </div>
+
+    <div class="secao">
+        <h2>Resumo Geral</h2>
+        <div class="cards">
+            <div class="card {'verde' if score_medio >= 80 else ('alerta' if score_medio >= 50 else 'critico')}">
+                <div class="rotulo">Score Medio</div>
+                <div class="valor-grande">{score_medio:.0f}%</div>
+            </div>
+            <div class="card">
+                <div class="rotulo">Municipios OK</div>
+                <div class="valor">{n_mun_ok}</div>
+                <div class="detalhe">{n_mun_dev} divergentes</div>
+            </div>
+            <div class="card">
+                <div class="rotulo">Redes OK</div>
+                <div class="valor">{n_redes_ok}</div>
+                <div class="detalhe">{n_redes_dev} com desvio</div>
+            </div>
+            <div class="card">
+                <div class="rotulo">Equipamentos OK</div>
+                <div class="valor">{n_equip_ok}</div>
+                <div class="detalhe">{n_equip_dev} com desvio</div>
+            </div>
+        </div>
+    </div>
+
+    {secoes_lote}
+
+    {_footer('Relatorio de Comparacao KML x JSON')}
+    {_JS_FILTRO}
+</body>
+</html>"""
+    return html
+
+
+# ══════════════════════════════════════════════════════════════════
+#  HTML DE QUESTIONAMENTOS AO CLIENTE
+# ══════════════════════════════════════════════════════════════════
+
+def gerar_html_questionamentos(resultados: dict) -> str:
+    """
+    Gera HTML com questionamentos ao cliente sobre desvios por lote.
+    Inclui campo 'Resposta' para preenchimento.
+    """
+    agora = datetime.now().strftime('%d/%m/%Y %H:%M')
+    lotes_str = ', '.join(sorted(resultados.keys()))
+
+    css_extra = """
+    .questao {
+        background: #FAFAFA; border: 1px solid var(--cinza-borda);
+        border-left: 4px solid var(--azul); padding: 18px 20px;
+        margin: 16px 0; border-radius: 0 6px 6px 0;
+    }
+    .questao h4 {
+        font-size: 13px; color: var(--azul); margin-bottom: 8px;
+    }
+    .questao .corpo { font-size: 12px; color: #616161; line-height: 1.7; }
+    .questao ul { margin: 8px 0 8px 20px; }
+    .questao li { margin-bottom: 4px; }
+    .questao .solicitacao {
+        margin-top: 10px; padding: 8px 12px;
+        background: var(--azul-claro); border-radius: 4px;
+        font-size: 11px; font-weight: 600; color: var(--azul);
+    }
+    .campo-resposta {
+        margin: 10px 0 0 0; padding: 12px; min-height: 50px;
+        border: 1px dashed var(--cinza-borda); border-radius: 4px;
+        font-size: 11px; color: #9E9E9E; font-style: italic;
+    }
+    .resumo-questoes {
+        margin-top: 30px; padding: 20px;
+        background: #F3E5F5; border-radius: 6px;
+    }
+    .resumo-questoes h3 { color: #7B1FA2; margin-bottom: 10px; }
+    """
+
+    secoes = ''
+    total_questoes = {}
+
+    for lote, dados in sorted(resultados.items()):
+        num = lote.replace('Lote ', '').strip()
+        from modulos.parser_json import carregar_json, extrair_cabecalho
+        jd = carregar_json(num)
+        cab_json = ''
+        if jd:
+            cab = extrair_cabecalho(jd)
+            cab_json = f' — {cab["objeto"]}'
+
+        questoes = []
+        n_questao = 0
+
+        # Q: Municipios divergentes
+        mun_dev = dados['municipios'][dados['municipios']['status'] != 'OK']
+        if not mun_dev.empty:
+            so_json = mun_dev[mun_dev['status'] == 'Só JSON']['nm_mun'].tolist()
+            so_kml = mun_dev[mun_dev['status'] == 'Só KML']['nm_mun'].tolist()
+            if so_json:
+                n_questao += 1
+                itens = ''.join(f'<li>{m}</li>' for m in so_json)
+                questoes.append(f"""
+                <div class="questao">
+                    <h4>Questao {n_questao} — Municipios no orcamento sem geometria KML ({len(so_json)} municipios)</h4>
+                    <div class="corpo">
+                        <p>Os seguintes municipios constam no orcamento (JSON) mas nao possuem dados geoespaciais no KML:</p>
+                        <ul>{itens}</ul>
+                        <div class="solicitacao">Solicitamos: Confirmar se estes municipios serao incluidos na concepcao ou removidos do orcamento.</div>
+                    </div>
+                    <div class="campo-resposta">Resposta:</div>
+                </div>""")
+            if so_kml:
+                n_questao += 1
+                itens = ''.join(f'<li>{m}</li>' for m in so_kml)
+                questoes.append(f"""
+                <div class="questao">
+                    <h4>Questao {n_questao} — Municipios no KML sem orcamento ({len(so_kml)} municipios)</h4>
+                    <div class="corpo">
+                        <p>Os seguintes municipios possuem dados geoespaciais no KML mas nao constam no orcamento:</p>
+                        <ul>{itens}</ul>
+                        <div class="solicitacao">Solicitamos: Incluir no orcamento ou remover da concepcao?</div>
+                    </div>
+                    <div class="campo-resposta">Resposta:</div>
+                </div>""")
+
+        # Q: Redes so KML
+        if not dados['redes'].empty:
+            so_kml_redes = dados['redes'][dados['redes']['status'] == 'Só KML']
+            if not so_kml_redes.empty:
+                n_questao += 1
+                agr = so_kml_redes.groupby(['subtipo', 'material_norm', 'dn_mm']).agg(
+                    ext=('extensao_kml_m', 'sum'), n=('extensao_kml_m', 'count')).reset_index()
+                itens = ''.join(
+                    f'<li>{int(r["n"])}x {r["subtipo"]} {r["material_norm"]} DN{int(r["dn_mm"])} '
+                    f'(total {r["ext"]:,.0f}m)</li>'
+                    for _, r in agr.iterrows())
+                questoes.append(f"""
+                <div class="questao">
+                    <h4>Questao {n_questao} — Redes no KML sem item orcamentario ({len(so_kml_redes)} itens)</h4>
+                    <div class="corpo">
+                        <p>Trechos de rede presentes no KML sem correspondencia no orcamento:</p>
+                        <ul>{itens}</ul>
+                        <div class="solicitacao">Solicitamos: Incluir no orcamento ou remover da concepcao?</div>
+                    </div>
+                    <div class="campo-resposta">Resposta:</div>
+                </div>""")
+
+            # Redes so JSON
+            so_json_redes = dados['redes'][dados['redes']['status'] == 'Só JSON']
+            if not so_json_redes.empty:
+                n_questao += 1
+                agr = so_json_redes.groupby(['subtipo', 'material_norm', 'dn_mm']).agg(
+                    ext=('extensao_json_m', 'sum'), n=('extensao_json_m', 'count')).reset_index()
+                itens = ''.join(
+                    f'<li>{int(r["n"])}x {r["subtipo"]} {r["material_norm"]} DN{int(r["dn_mm"])} '
+                    f'(total orcado {r["ext"]:,.0f}m)</li>'
+                    for _, r in agr.iterrows())
+                questoes.append(f"""
+                <div class="questao">
+                    <h4>Questao {n_questao} — Itens orcados sem geometria KML ({len(so_json_redes)} itens)</h4>
+                    <div class="corpo">
+                        <p>Itens de rede presentes no orcamento sem representacao no KML:</p>
+                        <ul>{itens}</ul>
+                        <div class="solicitacao">Solicitamos: Indicar localizacao ou confirmar exclusao.</div>
+                    </div>
+                    <div class="campo-resposta">Resposta:</div>
+                </div>""")
+
+            # Redes com desvio significativo
+            desvios = dados['redes'][dados['redes']['status'] == 'Desvio']
+            if not desvios.empty:
+                n_questao += 1
+                agr = desvios.groupby(['subtipo']).agg(
+                    n=('extensao_kml_m', 'count'),
+                    kml=('extensao_kml_m', 'sum'),
+                    json=('extensao_json_m', 'sum'),
+                ).reset_index()
+                itens = ''.join(
+                    f'<li>{r["subtipo"]}: {int(r["n"])} itens — KML {r["kml"]:,.0f}m vs JSON {r["json"]:,.0f}m '
+                    f'(dif. {r["kml"]-r["json"]:+,.0f}m)</li>'
+                    for _, r in agr.iterrows())
+                questoes.append(f"""
+                <div class="questao">
+                    <h4>Questao {n_questao} — Desvio significativo de extensao ({len(desvios)} itens, &gt;5%)</h4>
+                    <div class="corpo">
+                        <p>Itens cuja extensao KML difere mais de 5% do valor orcado:</p>
+                        <ul>{itens}</ul>
+                        <div class="solicitacao">Solicitamos: Confirmar qual valor deve prevalecer (KML ou orcamento).</div>
+                    </div>
+                    <div class="campo-resposta">Resposta:</div>
+                </div>""")
+
+        # Q: Equipamentos divergentes
+        if not dados['equipamentos'].empty:
+            eq_dev = dados['equipamentos'][dados['equipamentos']['status'] != 'OK']
+            if not eq_dev.empty:
+                n_questao += 1
+                itens = ''.join(
+                    f'<li>{r["nm_mun"]} — {r["tipo_equip"]}: KML={r["qtd_kml"]} vs JSON={r["qtd_json"]} ({r["status"]})</li>'
+                    for _, r in eq_dev.iterrows())
+                questoes.append(f"""
+                <div class="questao">
+                    <h4>Questao {n_questao} — Equipamentos divergentes ({len(eq_dev)} itens)</h4>
+                    <div class="corpo">
+                        <p>Equipamentos com quantidade diferente entre KML e orcamento:</p>
+                        <ul>{itens}</ul>
+                        <div class="solicitacao">Solicitamos: Confirmar quantidade e especificacoes.</div>
+                    </div>
+                    <div class="campo-resposta">Resposta:</div>
+                </div>""")
+
+        total_questoes[lote] = n_questao
+
+        prioridade = 'Alta' if n_questao >= 4 else ('Media' if n_questao >= 2 else 'Baixa')
+        cor_prio = 'critico' if prioridade == 'Alta' else ('alerta' if prioridade == 'Media' else 'verde')
+
+        secoes += f"""
+        <div class="secao">
+            <h2>{lote}{cab_json}</h2>
+            <div class="cards cards-3">
+                <div class="card">
+                    <div class="rotulo">Questoes</div>
+                    <div class="valor-grande">{n_questao}</div>
+                </div>
+                <div class="card {cor_prio}">
+                    <div class="rotulo">Prioridade</div>
+                    <div class="valor">{prioridade}</div>
+                </div>
+                <div class="card">
+                    <div class="rotulo">Score</div>
+                    <div class="valor">{dados['score']['score']:.0f}%</div>
+                </div>
+            </div>
+            {''.join(questoes)}
+        </div>
+        """
+
+    # Resumo final
+    total_q = sum(total_questoes.values())
+    resumo_linhas = ''.join(
+        f'<tr><td>{lote}</td><td>{n}</td><td>{"Alta" if n >= 4 else ("Media" if n >= 2 else "Baixa")}</td></tr>'
+        for lote, n in sorted(total_questoes.items()))
+
+    html = f"""<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Questionamentos ao Cliente — Concepcao de Saneamento</title>
+    <style>{_CSS_BASE}{css_extra}</style>
+</head>
+<body>
+    <div class="header">
+        <h1>Questionamentos ao Cliente</h1>
+        <div class="subtitulo">Concepcao de Saneamento — Desvios por Lote</div>
+        <div class="meta">Lotes: {lotes_str} | Gerado em {agora} | {total_q} questoes pendentes</div>
+        <div class="tipo-doc">Documento para Validacao</div>
+    </div>
+
+    <div class="secao">
+        <p class="descritivo">
+            Prezado(a),<br><br>
+            Apos analise tecnica da concepcao de saneamento, identificamos os seguintes
+            desvios entre os dados geoespaciais (KML) e o orcamento (JSON) que requerem
+            esclarecimento e/ou validacao da equipe tecnica.
+        </p>
+    </div>
+
+    {secoes}
+
+    <div class="resumo-questoes">
+        <h3>Resumo de Questoes Pendentes</h3>
+        <table>
+            <thead><tr><th>Lote</th><th>Questoes</th><th>Prioridade</th></tr></thead>
+            <tbody>{resumo_linhas}</tbody>
+        </table>
+        <p class="descritivo" style="margin-top:12px;">
+            <strong>Total: {total_q} questoes pendentes.</strong><br>
+            Aguardamos retorno ate __/__/2026.
+        </p>
+    </div>
+
+    {_footer('Questionamentos ao Cliente')}
+</body>
+</html>"""
+    return html
+
+
+# ══════════════════════════════════════════════════════════════════
+#  HTML DE COTAÇÃO PARA FORNECEDORES
+# ══════════════════════════════════════════════════════════════════
+
+def gerar_html_cotacao_fornecedores(df_linear: pd.DataFrame,
+                                     df_pontual: pd.DataFrame) -> str:
+    """
+    Gera HTML com lista de materiais e equipamentos para cotacao com fornecedores.
+    Agrupa por tipo de material com especificacoes tecnicas.
+    """
+    from modulos.comparador import agregar_materiais_para_cotacao
+
+    agora = datetime.now().strftime('%d/%m/%Y %H:%M')
+    lotes_str = ', '.join(sorted(df_linear['lote'].unique())) if not df_linear.empty and 'lote' in df_linear.columns else '—'
+
+    dados = agregar_materiais_para_cotacao(df_linear, df_pontual)
+
+    css_extra = """
+    .campo-preco {
+        margin: 8px 0; padding: 10px 14px;
+        background: #FFF8E1; border: 1px dashed #FFE082;
+        border-radius: 4px; font-size: 11px; color: #F57F17;
+    }
+    .subtotal-row td {
+        font-weight: 700; background: #E3F2FD !important;
+        border-top: 2px solid var(--azul);
+    }
+    .secao-material {
+        margin-bottom: 32px; page-break-inside: avoid;
+    }
+    .intro-fornecedor {
+        font-size: 13px; color: #424242; line-height: 1.8;
+        margin-bottom: 20px; padding: 16px 20px;
+        background: var(--cinza-bg); border-radius: 6px;
+    }
+    """
+
+    # Secoes de tubulacao por material
+    secoes_tubos = ''
+    item_num = 0
+    resumo_materiais = []
+
+    if not dados['tubulacoes'].empty:
+        for material, grupo in dados['tubulacoes'].groupby('material'):
+            item_num_inicio = item_num + 1
+            linhas_html = ''
+            subtotal = 0
+            for _, row in grupo.iterrows():
+                item_num += 1
+                ext = row['extensao_total_m']
+                subtotal += ext
+                metodo = row.get('metodo_construtivo', '—') if 'metodo_construtivo' in row.index else '—'
+                linhas_html += f"""<tr>
+                    <td>{item_num}</td>
+                    <td>Tubo {material} p/ {row['subtipo']}</td>
+                    <td>{int(row['diametro_nominal_mm'])}</td>
+                    <td>{ext:,.0f}</td>
+                    <td>{int(row['qtd_trechos'])}</td>
+                    <td>{metodo}</td>
+                </tr>"""
+
+            linhas_html += f"""<tr class="subtotal-row">
+                <td></td><td>SUBTOTAL {material}</td><td></td>
+                <td>{subtotal:,.0f}</td><td></td><td></td>
+            </tr>"""
+
+            resumo_materiais.append({'Categoria': f'Tubulacao {material}',
+                                     'Qtd/Extensao': f'{subtotal:,.0f}', 'Unidade': 'metros'})
+
+            secoes_tubos += f"""
+            <div class="secao-material">
+                <h3>Tubulacoes — {material}</h3>
+                <div class="tabela-container">
+                <table>
+                    <thead><tr>
+                        <th>Item</th><th>Descricao</th><th>DN (mm)</th>
+                        <th>Extensao (m)</th><th>Trechos</th><th>Metodo</th>
+                    </tr></thead>
+                    <tbody>{linhas_html}</tbody>
+                </table>
+                </div>
+                <div class="campo-preco">Preco Unit. (R$/m): ________&nbsp;&nbsp;&nbsp;Total (R$): ________</div>
+            </div>
+            """
+
+    # Secoes de equipamentos
+    secoes_equip = ''
+
+    # EEE
+    if not dados['eee'].empty:
+        item_num_eee = 0
+        linhas = ''
+        for _, row in dados['eee'].iterrows():
+            item_num_eee += 1
+            vazao = _fmt(row.get('vazao_total_l_s'), 1) if pd.notna(row.get('vazao_total_l_s')) else '—'
+            amt = _fmt(row.get('altura_manometrica_mca'), 1) if pd.notna(row.get('altura_manometrica_mca')) else '—'
+            pot = _fmt(row.get('potencia_cv'), 0) if pd.notna(row.get('potencia_cv')) else '—'
+            linhas += f"""<tr>
+                <td>{item_num_eee}</td>
+                <td>{row.get('nome', '—')}</td>
+                <td>{row.get('nm_mun', '—')}</td>
+                <td>{vazao}</td><td>{amt}</td><td>{pot}</td>
+            </tr>"""
+        resumo_materiais.append({'Categoria': 'Elevatorias (EEE)',
+                                 'Qtd/Extensao': str(len(dados['eee'])), 'Unidade': 'conjuntos'})
+        secoes_equip += f"""
+        <div class="secao-material">
+            <h3>Elevatorias de Esgoto (EEE)</h3>
+            <div class="tabela-container">
+            <table>
+                <thead><tr>
+                    <th>Item</th><th>Nome</th><th>Municipio</th>
+                    <th>Vazao (L/s)</th><th>AMT (mca)</th><th>Potencia (CV)</th>
+                </tr></thead>
+                <tbody>{linhas}</tbody>
+            </table>
+            </div>
+            <p class="descritivo">
+                <strong>Especificacoes:</strong> Conjunto motobomba submersivel,
+                motor WEG ou equivalente, selo mecanico, painel eletrico com
+                automacao, guia de remocao em aco inox.
+            </p>
+            <div class="campo-preco">Preco Unit. (R$/conjunto): ________&nbsp;&nbsp;&nbsp;Total (R$): ________</div>
+        </div>
+        """
+
+    # Reservatorios
+    if not dados['reservatorios'].empty:
+        item_num_res = 0
+        linhas = ''
+        for _, row in dados['reservatorios'].iterrows():
+            item_num_res += 1
+            vol = _fmt(row.get('volume_total_m3'), 0) if pd.notna(row.get('volume_total_m3')) else '—'
+            linhas += f"""<tr>
+                <td>{item_num_res}</td>
+                <td>{row.get('nome', '—')}</td>
+                <td>{row.get('nm_mun', '—')}</td>
+                <td>{vol}</td>
+            </tr>"""
+        resumo_materiais.append({'Categoria': 'Reservatorios',
+                                 'Qtd/Extensao': str(len(dados['reservatorios'])), 'Unidade': 'unidades'})
+        secoes_equip += f"""
+        <div class="secao-material">
+            <h3>Reservatorios</h3>
+            <div class="tabela-container">
+            <table>
+                <thead><tr>
+                    <th>Item</th><th>Nome</th><th>Municipio</th><th>Volume (m3)</th>
+                </tr></thead>
+                <tbody>{linhas}</tbody>
+            </table>
+            </div>
+            <div class="campo-preco">Preco Unit. (R$/un): ________&nbsp;&nbsp;&nbsp;Total (R$): ________</div>
+        </div>
+        """
+
+    # ETEs
+    if not dados['etes'].empty:
+        item_num_ete = 0
+        linhas = ''
+        for _, row in dados['etes'].iterrows():
+            item_num_ete += 1
+            vazao = _fmt(row.get('vazao_total_l_s'), 1) if pd.notna(row.get('vazao_total_l_s')) else '—'
+            vol = _fmt(row.get('volume_total_m3'), 0) if pd.notna(row.get('volume_total_m3')) else '—'
+            linhas += f"""<tr>
+                <td>{item_num_ete}</td>
+                <td>{row.get('nome', '—')}</td>
+                <td>{row.get('nm_mun', '—')}</td>
+                <td>{vazao}</td><td>{vol}</td>
+            </tr>"""
+        resumo_materiais.append({'Categoria': 'ETEs',
+                                 'Qtd/Extensao': str(len(dados['etes'])), 'Unidade': 'unidades'})
+        secoes_equip += f"""
+        <div class="secao-material">
+            <h3>ETEs — Estacoes de Tratamento de Esgoto</h3>
+            <div class="tabela-container">
+            <table>
+                <thead><tr>
+                    <th>Item</th><th>Nome</th><th>Municipio</th>
+                    <th>Vazao (L/s)</th><th>Volume (m3)</th>
+                </tr></thead>
+                <tbody>{linhas}</tbody>
+            </table>
+            </div>
+            <div class="campo-preco">Preco Unit. (R$/un): ________&nbsp;&nbsp;&nbsp;Total (R$): ________</div>
+        </div>
+        """
+
+    # Pocos
+    if not dados['pocos'].empty:
+        item_num_pp = 0
+        linhas = ''
+        for _, row in dados['pocos'].iterrows():
+            item_num_pp += 1
+            vazao = _fmt(row.get('vazao_total_l_s'), 1) if pd.notna(row.get('vazao_total_l_s')) else '—'
+            linhas += f"""<tr>
+                <td>{item_num_pp}</td>
+                <td>{row.get('nome', '—')}</td>
+                <td>{row.get('nm_mun', '—')}</td>
+                <td>{vazao}</td>
+            </tr>"""
+        resumo_materiais.append({'Categoria': 'Pocos Profundos',
+                                 'Qtd/Extensao': str(len(dados['pocos'])), 'Unidade': 'unidades'})
+        secoes_equip += f"""
+        <div class="secao-material">
+            <h3>Pocos Profundos</h3>
+            <div class="tabela-container">
+            <table>
+                <thead><tr>
+                    <th>Item</th><th>Nome</th><th>Municipio</th><th>Vazao (L/s)</th>
+                </tr></thead>
+                <tbody>{linhas}</tbody>
+            </table>
+            </div>
+            <div class="campo-preco">Preco Unit. (R$/un): ________&nbsp;&nbsp;&nbsp;Total (R$): ________</div>
+        </div>
+        """
+
+    # Boosters
+    if not dados['boosters'].empty:
+        resumo_materiais.append({'Categoria': 'Boosters',
+                                 'Qtd/Extensao': str(len(dados['boosters'])), 'Unidade': 'unidades'})
+
+    # Resumo geral
+    resumo_html = ''
+    if resumo_materiais:
+        df_resumo = pd.DataFrame(resumo_materiais)
+        resumo_html = _tabela(df_resumo)
+
+    html = f"""<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cotacao para Fornecedores — Concepcao de Saneamento</title>
+    <style>{_CSS_BASE}{css_extra}</style>
+</head>
+<body>
+    <div class="header">
+        <h1>Solicitacao de Cotacao</h1>
+        <div class="subtitulo">Materiais e Equipamentos — Concepcao de Saneamento SABESP</div>
+        <div class="meta">Lotes: {lotes_str} | Gerado em {agora}</div>
+        <div class="tipo-doc">Documento para Fornecedores</div>
+    </div>
+
+    <div class="secao">
+        <div class="intro-fornecedor">
+            <strong>Prezado Fornecedor,</strong><br><br>
+            Solicitamos cotacao para os materiais e equipamentos abaixo,
+            referentes a concepcao de obras de saneamento basico
+            (concessao SABESP — lotes {lotes_str}).<br><br>
+            <strong>Prazo para retorno:</strong> __/__/2026<br>
+            <strong>Condicoes:</strong> CIF obra | Prazo pgto: 30/60/90 DDL
+        </div>
+    </div>
+
+    <div class="secao">
+        <h2>Tubulacoes</h2>
+        {secoes_tubos}
+    </div>
+
+    <div class="secao">
+        <h2>Equipamentos</h2>
+        {secoes_equip}
+    </div>
+
+    <div class="secao">
+        <h2>Resumo Geral</h2>
+        {resumo_html}
+    </div>
+
+    <div class="secao">
+        <div class="intro-fornecedor">
+            <strong>Informacoes adicionais ou duvidas:</strong><br>
+            Contato: ________________ &nbsp;|&nbsp; E-mail: ________________<br>
+            Telefone: ________________
+        </div>
+    </div>
+
+    {_footer('Solicitacao de Cotacao — Fornecedores')}
+    {_JS_FILTRO}
+</body>
+</html>"""
+    return html

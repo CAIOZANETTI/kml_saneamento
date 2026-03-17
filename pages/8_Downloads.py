@@ -1,9 +1,11 @@
-"""Pagina: Downloads — Memorial Gerencial, Analitico e Excel"""
+"""Pagina: Downloads — Memorial Gerencial, Analitico, Excel e Relatorios KML x JSON"""
 
 import streamlit as st
 from modulos.carregador import configurar_sidebar_e_dados
-from modulos import diagnostico, exportador
-from modulos.memorial import gerar_memorial_gerencial, gerar_memorial_analitico
+from modulos import diagnostico, exportador, comparador, parser_json
+from modulos.memorial import (gerar_memorial_gerencial, gerar_memorial_analitico,
+                               gerar_html_comparacao, gerar_html_questionamentos,
+                               gerar_html_cotacao_fornecedores)
 
 st.set_page_config(page_title='Downloads', page_icon=':material/download:', layout='wide')
 
@@ -99,3 +101,81 @@ with st.container(border=True):
             type='primary',
         )
         st.caption(f'~{len(excel_bytes.getvalue())//1024} KB')
+
+# ── 4. Comparacao KML x JSON ──────────────────────────────────────
+
+lotes = sorted(df_linear['lote'].unique()) if not df_linear.empty and 'lote' in df_linear.columns else []
+lotes_com_json = [l for l in lotes if parser_json.carregar_json(l.replace('Lote ', '').strip())]
+
+if lotes_com_json:
+    st.divider()
+    st.subheader('Relatorios KML x JSON')
+
+    resultados = comparador.comparar_todos_lotes(df_linear, df_pontual, df_areas, lotes_com_json)
+
+    with st.container(border=True):
+        c1, c2 = st.columns([4, 1])
+        with c1:
+            st.subheader('Comparacao KML x JSON')
+            st.badge('Comparacao', color='orange')
+            st.markdown(
+                'Relatorio de desvios entre concepcao geoespacial (KML) '
+                'e orcamento (JSON) — extensoes, equipamentos, municipios.'
+            )
+        with c2:
+            html_comp = gerar_html_comparacao(resultados)
+            st.download_button(
+                label='Baixar .html',
+                data=html_comp.encode('utf-8'),
+                file_name='comparacao_kml_json.html',
+                mime='text/html',
+                use_container_width=True,
+                type='primary',
+                key='dl_comparacao',
+            )
+            st.caption(f'~{len(html_comp)//1024} KB')
+
+    with st.container(border=True):
+        c1, c2 = st.columns([4, 1])
+        with c1:
+            st.subheader('Questionamentos ao Cliente')
+            st.badge('Cliente', color='red')
+            st.markdown(
+                'Lista de perguntas sobre desvios organizadas por lote, '
+                'com campo para resposta — ideal para **validacao com a SABESP**.'
+            )
+        with c2:
+            html_quest = gerar_html_questionamentos(resultados)
+            st.download_button(
+                label='Baixar .html',
+                data=html_quest.encode('utf-8'),
+                file_name='questionamentos_cliente.html',
+                mime='text/html',
+                use_container_width=True,
+                type='primary',
+                key='dl_questionamentos',
+            )
+            st.caption(f'~{len(html_quest)//1024} KB')
+
+    with st.container(border=True):
+        c1, c2 = st.columns([4, 1])
+        with c1:
+            st.subheader('Cotacao para Fornecedores')
+            st.badge('Fornecedores', color='green')
+            st.markdown(
+                'Listagem de materiais e equipamentos por tipo '
+                'com especificacoes tecnicas (DN, material, vazao, potencia) — '
+                'pronta para **envio a fornecedores**.'
+            )
+        with c2:
+            html_cot = gerar_html_cotacao_fornecedores(df_linear, df_pontual)
+            st.download_button(
+                label='Baixar .html',
+                data=html_cot.encode('utf-8'),
+                file_name='cotacao_fornecedores.html',
+                mime='text/html',
+                use_container_width=True,
+                type='primary',
+                key='dl_cotacao',
+            )
+            st.caption(f'~{len(html_cot)//1024} KB')
