@@ -9,17 +9,17 @@ st.set_page_config(page_title='Mapa', page_icon=':material/map:', layout='wide')
 df_linear, df_pontual, df_areas = configurar_sidebar_e_dados()
 
 st.header('Mapa Interativo')
-st.caption('Visualizacao geografica das redes, equipamentos e areas')
+st.caption('Visualizacao geografica das redes, localizada e areas')
 
 tipo_mapa = st.radio(
-    'Camada', ['Completo', 'Redes', 'Equipamentos'], horizontal=True)
+    'Camada', ['Completo', 'Redes', 'Localizada'], horizontal=True)
 
 if tipo_mapa == 'Completo':
     deck = relatorios.mapa_completo(df_linear, df_pontual, df_areas)
 elif tipo_mapa == 'Redes':
     deck = relatorios.mapa_redes(df_linear)
 else:
-    deck = relatorios.mapa_equipamentos(df_pontual)
+    deck = relatorios.mapa_localizada(df_pontual)
 
 if deck:
     st.pydeck_chart(deck)
