@@ -1,15 +1,15 @@
-"""Pagina: Equipamentos e Estruturas"""
+"""Pagina: Localizada — Equipamentos e Estruturas"""
 
 import streamlit as st
 import pandas as pd
 from modulos.carregador import configurar_sidebar_e_dados
 from modulos import diagnostico, relatorios
 
-st.set_page_config(page_title='Equipamentos', page_icon=':material/precision_manufacturing:', layout='wide')
+st.set_page_config(page_title='Localizada', page_icon=':material/precision_manufacturing:', layout='wide')
 
 df_linear, df_pontual, df_areas = configurar_sidebar_e_dados()
 
-st.header('Equipamentos e Estruturas')
+st.header('Localizada')
 st.caption('ETEs, reservatorios, elevatarias, pocos e demais equipamentos')
 
 # ── KPIs ──────────────────────────────────────────────────────────

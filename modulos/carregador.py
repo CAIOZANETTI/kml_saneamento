@@ -91,10 +91,40 @@ def _aplicar_elevacao_precomputada(df_linear: pd.DataFrame) -> pd.DataFrame:
     return df_linear
 
 
+def _exibir_cabecalho_fixo(lotes_sel, recorte_sel, df_linear):
+    """Exibe cabeçalho fixo no topo com informações do contexto atual."""
+    if not lotes_sel and not recorte_sel:
+        return
+
+    # Calcular métricas
+    ext_total = df_linear['extensao_calculada_m'].sum() / 1000 if not df_linear.empty else 0
+    n_mun = df_linear['nm_mun'].nunique() if not df_linear.empty and 'nm_mun' in df_linear.columns else 0
+    ext_agua = df_linear[df_linear['tipo'] == 'Água']['extensao_calculada_m'].sum() / 1000 if not df_linear.empty else 0
+    ext_esg = df_linear[df_linear['tipo'] == 'Esgoto']['extensao_calculada_m'].sum() / 1000 if not df_linear.empty else 0
+
+    lotes_txt = ', '.join(lotes_sel) if lotes_sel else 'Todos'
+    recorte_txt = recorte_sel if recorte_sel else 'Todos'
+
+    info_parts = [f'{lotes_txt}', f'{recorte_txt}']
+    info_parts.append(f'{ext_total:,.1f} km')
+    info_parts.append(f'{n_mun} mun.')
+    info_parts.append(f'Água {ext_agua:,.1f} km')
+    info_parts.append(f'Esgoto {ext_esg:,.1f} km')
+
+    st.markdown(
+        '<div style="position:sticky;top:0;z-index:999;background:#f0f2f6;'
+        'padding:4px 12px;border-bottom:1px solid #ddd;font-size:0.8rem;'
+        'color:#555;display:flex;gap:16px;flex-wrap:wrap;">'
+        + ' &bull; '.join(info_parts)
+        + '</div>',
+        unsafe_allow_html=True,
+    )
+
+
 def configurar_sidebar_e_dados():
     """
     Configura sidebar com fonte de dados e filtros.
-    Retorna (df_linear, df_pontual, df_areas, lotes_disponiveis) ou faz st.stop().
+    Retorna (df_linear, df_pontual, df_areas) ou faz st.stop().
     """
     st.sidebar.markdown(
         '<h2 style="margin-bottom:0">Concepção Saneamento</h2>',
@@ -139,15 +169,48 @@ def configurar_sidebar_e_dados():
     if usa_exemplo and 'elevacao_montante_m' not in df_linear.columns:
         df_linear = _aplicar_elevacao_precomputada(df_linear)
 
-    # Filtro de lotes (sem default — usuário escolhe)
+    # Filtro de lotes — persistido via session_state
+    lotes_sel = []
     if lotes_disponiveis and 'lote' in df_linear.columns:
-        lotes_sel = st.sidebar.multiselect('Lotes', lotes_disponiveis)
+        lotes_sel = st.sidebar.multiselect(
+            'Lotes',
+            lotes_disponiveis,
+            default=st.session_state.get('_lotes_sel', []),
+            key='_lotes_sel',
+        )
         if lotes_sel:
             df_linear = df_linear[df_linear['lote'].isin(lotes_sel)]
             if 'lote' in df_pontual.columns:
                 df_pontual = df_pontual[df_pontual['lote'].isin(lotes_sel)]
             if 'lote' in df_areas.columns:
                 df_areas = df_areas[df_areas['lote'].isin(lotes_sel)]
+
+    # Filtro Recorte (Formal / Rural) — persistido via session_state
+    recorte_sel = None
+    if 'recorte' in df_areas.columns:
+        recortes_disp = sorted(df_areas['recorte'].dropna().unique())
+        if recortes_disp:
+            opcoes_recorte = ['Todos'] + recortes_disp
+            recorte_sel = st.sidebar.selectbox(
+                'Recorte',
+                opcoes_recorte,
+                index=opcoes_recorte.index(st.session_state.get('_recorte_sel', 'Todos'))
+                    if st.session_state.get('_recorte_sel', 'Todos') in opcoes_recorte else 0,
+                key='_recorte_sel',
+            )
+            if recorte_sel and recorte_sel != 'Todos':
+                # Filtrar áreas pelo recorte
+                ae_ids_filtradas = set(
+                    df_areas[df_areas['recorte'] == recorte_sel]['ae_id'].dropna().unique()
+                )
+                df_areas = df_areas[df_areas['recorte'] == recorte_sel]
+                # Filtrar linear e pontual pelos ae_ids das áreas filtradas
+                if 'ae_id' in df_linear.columns and ae_ids_filtradas:
+                    df_linear = df_linear[df_linear['ae_id'].isin(ae_ids_filtradas)]
+                if 'ae_id' in df_pontual.columns and ae_ids_filtradas:
+                    df_pontual = df_pontual[df_pontual['ae_id'].isin(ae_ids_filtradas)]
+            else:
+                recorte_sel = None
 
     # Filtros gerais
     st.sidebar.markdown('---')
@@ -189,5 +252,8 @@ def configurar_sidebar_e_dados():
                 ]
 
     st.sidebar.markdown('---')
+
+    # Cabeçalho fixo com contexto atual
+    _exibir_cabecalho_fixo(lotes_sel, recorte_sel, df_linear)
 
     return df_linear, df_pontual, df_areas

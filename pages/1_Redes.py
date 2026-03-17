@@ -35,8 +35,7 @@ if not df_linear.empty:
             st.subheader('Resumo por Subtipo')
             tab = pd.DataFrame({
                 'Subtipo': r_sub['subtipo'].tolist(),
-                'Sistema': [':blue[Água]' if t == 'Água' else ':brown[Esgoto]'
-                           for t in r_sub['tipo']],
+                'Sistema': r_sub['tipo'].tolist(),
                 'Extensao (m)': [f'{v:,.0f}' for v in r_sub['extensao_m']],
                 'Trechos': r_sub['qtd_trechos'].tolist(),
             })

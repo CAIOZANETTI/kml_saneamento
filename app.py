@@ -48,10 +48,10 @@ with st.container(border=True):
                   delta_color='off', border=True)
 
     row2 = st.columns(4)
-    row2[0].metric(':blue[Rede de Agua]', f'{ext_agua/1000:,.1f} km',
+    row2[0].metric('Rede de Agua', f'{ext_agua/1000:,.1f} km',
                    delta=f'{ext_agua/ext_total*100:.0f}% do total' if ext_total else None,
                    delta_color='off', border=True)
-    row2[1].metric(':brown[Rede de Esgoto]', f'{ext_esg/1000:,.1f} km',
+    row2[1].metric('Rede de Esgoto', f'{ext_esg/1000:,.1f} km',
                    delta=f'{ext_esg/ext_total*100:.0f}% do total' if ext_total else None,
                    delta_color='off', border=True)
     row2[2].metric('ETEs', str(n_ete), border=True)
