@@ -32,7 +32,10 @@ def carregar_kml(arquivo) -> etree._ElementTree:
 def extrair_coordenadas(placemark) -> list[tuple[float, float]]:
     """Extrai lista de (lon, lat) de qualquer geometria do placemark."""
     coordenadas = []
-    for elem_coords in placemark.findall('.//{http://www.opengis.net/kml/2.2}coordinates'):
+    elems = placemark.findall('.//{http://www.opengis.net/kml/2.2}coordinates')
+    if not elems:
+        elems = placemark.findall('.//coordinates')
+    for elem_coords in elems:
         texto = elem_coords.text
         if not texto:
             continue
@@ -57,24 +60,57 @@ def calcular_centroide(coordenadas: list[tuple[float, float]]) -> tuple[float, f
 
 
 def _extrair_dados_placemark(placemark) -> dict:
-    """Extrai todos os SimpleData de um placemark como dicionário."""
+    """Extrai dados de um placemark (SimpleData ou Data/value, com ou sem namespace)."""
     dados = {}
-    for sd in placemark.findall('.//{http://www.opengis.net/kml/2.2}SimpleData'):
+
+    # Tentar SchemaData/SimpleData — com namespace KML
+    sds = placemark.findall('.//{http://www.opengis.net/kml/2.2}SimpleData')
+    if not sds:
+        # Alguns exportadores (QGIS, ArcGIS) omitem namespace nos elementos de dados
+        sds = placemark.findall('.//SimpleData')
+    for sd in sds:
         nome = sd.get('name')
         valor = (sd.text or '').strip()
         if nome:
             dados[nome] = valor
+
+    # Se SimpleData não encontrou nada, tentar formato Data/value
+    if not dados:
+        data_elems = placemark.findall('.//{http://www.opengis.net/kml/2.2}Data')
+        if not data_elems:
+            data_elems = placemark.findall('.//Data')
+        for de in data_elems:
+            nome = de.get('name')
+            val_el = de.find('{http://www.opengis.net/kml/2.2}value')
+            if val_el is None:
+                val_el = de.find('value')
+            if nome and val_el is not None:
+                dados[nome] = (val_el.text or '').strip()
+
     return dados
 
 
 def _extrair_placemarks_folder(arvore: etree._ElementTree, nome_folder: str) -> list[dict]:
     """Extrai todos os placemarks de um folder específico."""
     registros = []
-    for folder in arvore.findall('.//kml:Folder', NS):
+
+    # Buscar folders com namespace KML; fallback sem namespace
+    folders = arvore.findall('.//kml:Folder', NS)
+    if not folders:
+        folders = arvore.findall('.//Folder')
+
+    for folder in folders:
         nome = folder.find('kml:name', NS)
+        if nome is None:
+            nome = folder.find('name')
         if nome is None or nome.text != nome_folder:
             continue
-        for pm in folder.findall('kml:Placemark', NS):
+
+        placemarks = folder.findall('kml:Placemark', NS)
+        if not placemarks:
+            placemarks = folder.findall('Placemark')
+
+        for pm in placemarks:
             dados = _extrair_dados_placemark(pm)
             coords = extrair_coordenadas(pm)
             dados['_coordenadas'] = coords
