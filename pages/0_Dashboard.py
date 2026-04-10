@@ -22,9 +22,10 @@ st.caption('Diagnostico de obras de saneamento basico — Concessao SABESP')
 
 # ── KPIs Principais ───────────────────────────────────────────────
 
-ext_total = df_linear['extensao_calculada_m'].sum() if not df_linear.empty else 0
-ext_agua = df_linear[df_linear['tipo'] == 'Água']['extensao_calculada_m'].sum() if not df_linear.empty else 0
-ext_esg = df_linear[df_linear['tipo'] == 'Esgoto']['extensao_calculada_m'].sum() if not df_linear.empty else 0
+_has_ext = not df_linear.empty and 'extensao_calculada_m' in df_linear.columns
+ext_total = df_linear['extensao_calculada_m'].sum() if _has_ext else 0
+ext_agua = df_linear[df_linear['tipo'] == 'Água']['extensao_calculada_m'].sum() if _has_ext else 0
+ext_esg = df_linear[df_linear['tipo'] == 'Esgoto']['extensao_calculada_m'].sum() if _has_ext else 0
 n_mun = df_linear['nm_mun'].nunique() if not df_linear.empty and 'nm_mun' in df_linear.columns else 0
 n_ete = len(df_pontual[df_pontual['subtipo'] == 'ETE']) if not df_pontual.empty and 'subtipo' in df_pontual.columns else 0
 n_pocos = len(df_pontual[df_pontual['subtipo'] == 'Poço Profundo']) if not df_pontual.empty and 'subtipo' in df_pontual.columns else 0
@@ -68,7 +69,7 @@ if not r.empty:
 # ── Municipios Atendidos ──────────────────────────────────────────
 
 st.subheader('Municipios Atendidos')
-if not df_linear.empty and 'nm_mun' in df_linear.columns:
+if not df_linear.empty and 'nm_mun' in df_linear.columns and 'extensao_calculada_m' in df_linear.columns:
     mun_resumo = df_linear.groupby('nm_mun').agg(
         extensao_km=('extensao_calculada_m', lambda x: x.sum() / 1000),
         qtd_trechos=('extensao_calculada_m', 'count'),

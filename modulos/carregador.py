@@ -97,10 +97,11 @@ def _exibir_cabecalho_fixo(lotes_sel, recorte_sel, df_linear):
     if not lotes_sel and not recorte_sel:
         return
 
-    ext_total = df_linear['extensao_calculada_m'].sum() / 1000 if not df_linear.empty else 0
+    _has_ext = not df_linear.empty and 'extensao_calculada_m' in df_linear.columns
+    ext_total = df_linear['extensao_calculada_m'].sum() / 1000 if _has_ext else 0
     n_mun = df_linear['nm_mun'].nunique() if not df_linear.empty and 'nm_mun' in df_linear.columns else 0
-    ext_agua = df_linear[df_linear['tipo'] == 'Água']['extensao_calculada_m'].sum() / 1000 if not df_linear.empty else 0
-    ext_esg = df_linear[df_linear['tipo'] == 'Esgoto']['extensao_calculada_m'].sum() / 1000 if not df_linear.empty else 0
+    ext_agua = df_linear[df_linear['tipo'] == 'Água']['extensao_calculada_m'].sum() / 1000 if _has_ext else 0
+    ext_esg = df_linear[df_linear['tipo'] == 'Esgoto']['extensao_calculada_m'].sum() / 1000 if _has_ext else 0
 
     lotes_txt = ', '.join(lotes_sel) if lotes_sel else 'Todos'
     recorte_txt = recorte_sel if recorte_sel else 'Todos'

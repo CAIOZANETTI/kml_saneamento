@@ -14,7 +14,7 @@ import pandas as pd
 
 def resumo_extensao_por_subtipo(df: pd.DataFrame) -> pd.DataFrame:
     """Extensão (m) agrupada por subtipo e tipo."""
-    if df.empty or 'subtipo' not in df.columns:
+    if df.empty or 'subtipo' not in df.columns or 'extensao_calculada_m' not in df.columns:
         return pd.DataFrame()
     return df.groupby(['subtipo', 'tipo'])['extensao_calculada_m'].agg(
         ['sum', 'count']
@@ -25,7 +25,7 @@ def resumo_extensao_por_subtipo(df: pd.DataFrame) -> pd.DataFrame:
 
 def resumo_extensao_por_material(df: pd.DataFrame) -> pd.DataFrame:
     """Extensão (m) agrupada por material."""
-    if df.empty or 'material' not in df.columns:
+    if df.empty or 'material' not in df.columns or 'extensao_calculada_m' not in df.columns:
         return pd.DataFrame()
     return df.groupby('material')['extensao_calculada_m'].agg(
         ['sum', 'count']
@@ -36,7 +36,7 @@ def resumo_extensao_por_material(df: pd.DataFrame) -> pd.DataFrame:
 
 def resumo_extensao_por_diametro(df: pd.DataFrame) -> pd.DataFrame:
     """Extensão (m) agrupada por diâmetro nominal."""
-    if df.empty or 'diametro_nominal_mm' not in df.columns:
+    if df.empty or 'diametro_nominal_mm' not in df.columns or 'extensao_calculada_m' not in df.columns:
         return pd.DataFrame()
     return df.groupby('diametro_nominal_mm')['extensao_calculada_m'].agg(
         ['sum', 'count']
@@ -47,7 +47,7 @@ def resumo_extensao_por_diametro(df: pd.DataFrame) -> pd.DataFrame:
 
 def resumo_extensao_por_municipio(df: pd.DataFrame) -> pd.DataFrame:
     """Extensão (m) agrupada por município."""
-    if df.empty or 'nm_mun' not in df.columns:
+    if df.empty or 'nm_mun' not in df.columns or 'extensao_calculada_m' not in df.columns:
         return pd.DataFrame()
     return df.groupby('nm_mun')['extensao_calculada_m'].agg(
         ['sum', 'count']
@@ -58,7 +58,7 @@ def resumo_extensao_por_municipio(df: pd.DataFrame) -> pd.DataFrame:
 
 def resumo_extensao_por_metodo(df: pd.DataFrame) -> pd.DataFrame:
     """Extensão (m) agrupada por método construtivo."""
-    if df.empty or 'metodo_construtivo' not in df.columns:
+    if df.empty or 'metodo_construtivo' not in df.columns or 'extensao_calculada_m' not in df.columns:
         return pd.DataFrame()
     return df.groupby('metodo_construtivo')['extensao_calculada_m'].agg(
         ['sum', 'count']
@@ -420,17 +420,18 @@ def gerar_resumo_textual(df_linear: pd.DataFrame, df_pontual: pd.DataFrame,
     partes = []
 
     # Linear
-    if not df_linear.empty:
+    _has_ext = not df_linear.empty and 'extensao_calculada_m' in df_linear.columns
+    if not df_linear.empty and _has_ext:
         ext_total = df_linear['extensao_calculada_m'].sum()
         n_trechos = len(df_linear)
-        n_mun = df_linear['nm_mun'].nunique()
+        n_mun = df_linear['nm_mun'].nunique() if 'nm_mun' in df_linear.columns else 0
         n_lotes = df_linear['lote'].nunique() if 'lote' in df_linear.columns else 0
 
-        ext_agua = df_linear[df_linear['tipo'] == 'Água']['extensao_calculada_m'].sum()
-        ext_esgoto = df_linear[df_linear['tipo'] == 'Esgoto']['extensao_calculada_m'].sum()
+        ext_agua = df_linear[df_linear['tipo'] == 'Água']['extensao_calculada_m'].sum() if 'tipo' in df_linear.columns else 0
+        ext_esgoto = df_linear[df_linear['tipo'] == 'Esgoto']['extensao_calculada_m'].sum() if 'tipo' in df_linear.columns else 0
 
-        mat_top = df_linear.groupby('material')['extensao_calculada_m'].sum().sort_values(ascending=False)
-        mat_str = ', '.join(f'{m} ({v/ext_total*100:.0f}%)' for m, v in mat_top.head(3).items())
+        mat_top = df_linear.groupby('material')['extensao_calculada_m'].sum().sort_values(ascending=False) if 'material' in df_linear.columns else pd.Series(dtype=float)
+        mat_str = ', '.join(f'{m} ({v/ext_total*100:.0f}%)' for m, v in mat_top.head(3).items()) if not mat_top.empty else ''
 
         partes.append(
             f"Escopo: {n_lotes} lotes com {n_trechos:,} trechos de rede "

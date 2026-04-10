@@ -15,7 +15,7 @@ st.caption('Redes de distribuicao de agua e coleta de esgoto')
 # ── KPIs ──────────────────────────────────────────────────────────
 
 if not df_linear.empty:
-    ext_total = df_linear['extensao_calculada_m'].sum()
+    ext_total = df_linear['extensao_calculada_m'].sum() if 'extensao_calculada_m' in df_linear.columns else 0
     n_mat = df_linear['material'].nunique() if 'material' in df_linear.columns else 0
     dns = df_linear['diametro_nominal_mm'].dropna()
     dn_medio = f'{dns.mean():.0f} mm' if not dns.empty else '—'
