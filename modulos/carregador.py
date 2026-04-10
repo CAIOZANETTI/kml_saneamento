@@ -35,8 +35,12 @@ def _carregar_exemplos():
 
 
 @st.cache_data
-def _processar_uploads(_arquivos_bytes, nomes):
-    """Processa KMLs enviados pelo usuário."""
+def _processar_uploads(_arquivos_bytes, nomes, _sizes=None):
+    """Processa KMLs enviados pelo usuário.
+
+    _sizes é incluído para invalidar cache quando o conteúdo dos arquivos muda
+    (já que _arquivos_bytes não é hasheado pelo st.cache_data).
+    """
     dados = consolidar_multiplos_kml(_arquivos_bytes, nomes)
     dados = normalizar_todos(dados)
     return dados
@@ -167,7 +171,8 @@ def configurar_sidebar_e_dados():
         arquivos_upload = st.session_state.get('_arquivos_upload')
         if arquivos_upload:
             nomes_up = [f.name.replace('.kml', '') for f in arquivos_upload]
-            dados = _processar_uploads(arquivos_upload, nomes_up)
+            sizes_up = tuple(f.size for f in arquivos_upload)
+            dados = _processar_uploads(arquivos_upload, nomes_up, _sizes=sizes_up)
         if dados is None:
             st.error('Dados de upload não encontrados. Reconfigure na página inicial.')
             if st.button('Ir para pagina inicial'):
