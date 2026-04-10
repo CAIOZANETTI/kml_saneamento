@@ -431,7 +431,7 @@ def gerar_resumo_textual(df_linear: pd.DataFrame, df_pontual: pd.DataFrame,
         ext_esgoto = df_linear[df_linear['tipo'] == 'Esgoto']['extensao_calculada_m'].sum() if 'tipo' in df_linear.columns else 0
 
         mat_top = df_linear.groupby('material')['extensao_calculada_m'].sum().sort_values(ascending=False) if 'material' in df_linear.columns else pd.Series(dtype=float)
-        mat_str = ', '.join(f'{m} ({v/ext_total*100:.0f}%)' for m, v in mat_top.head(3).items()) if not mat_top.empty else ''
+        mat_str = ', '.join(f'{m} ({v/ext_total*100:.0f}%)' for m, v in mat_top.head(3).items()) if not mat_top.empty and ext_total > 0 else ''
 
         partes.append(
             f"Escopo: {n_lotes} lotes com {n_trechos:,} trechos de rede "
