@@ -20,6 +20,29 @@ df_linear, df_pontual, df_areas = configurar_sidebar_e_dados()
 st.header('Concepcao de Saneamento')
 st.caption('Diagnostico de obras de saneamento basico — Concessao SABESP')
 
+# ── Debug (remover depois) ────────────────────────────────────────
+with st.expander('🔍 Debug — Informações do DataFrame', expanded=True):
+    st.write(f'**Linear:** {len(df_linear)} linhas, {len(df_linear.columns)} colunas')
+    st.write(f'**Colunas:** `{list(df_linear.columns)}`')
+    if not df_linear.empty:
+        _ecm = 'extensao_calculada_m'
+        if _ecm in df_linear.columns:
+            st.write(f'**{_ecm} dtype:** `{df_linear[_ecm].dtype}`')
+            st.write(f'**{_ecm} primeiros 5:** `{df_linear[_ecm].head().tolist()}`')
+            st.write(f'**{_ecm} NaN count:** {df_linear[_ecm].isna().sum()} / {len(df_linear)}')
+            st.write(f'**{_ecm} sum:** {df_linear[_ecm].sum()}')
+        else:
+            st.error(f'Coluna {_ecm} NAO existe no DataFrame!')
+        if 'nm_mun' in df_linear.columns:
+            st.write(f'**nm_mun sample:** `{df_linear["nm_mun"].head().tolist()}`')
+            st.write(f'**nm_mun NaN:** {df_linear["nm_mun"].isna().sum()} / {len(df_linear)}')
+        if 'tipo' in df_linear.columns:
+            st.write(f'**tipo unique:** `{df_linear["tipo"].unique().tolist()}`')
+        if 'material' in df_linear.columns:
+            st.write(f'**material sample:** `{df_linear["material"].head().tolist()}`')
+        st.write('**Primeiras 3 linhas (todas colunas):**')
+        st.dataframe(df_linear.head(3))
+
 # ── KPIs Principais ───────────────────────────────────────────────
 
 _has_ext = not df_linear.empty and 'extensao_calculada_m' in df_linear.columns
