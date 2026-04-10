@@ -56,7 +56,8 @@ with st.container(border=True):
             cols_pv = ['lote', 'nm_mun', 'subtipo', 'diametro_nominal_mm',
                        'extensao_calculada_m', 'pv_status']
             cols_disp = [c for c in cols_pv if c in excedidos.columns]
-            st.dataframe(excedidos[cols_disp].sort_values('extensao_calculada_m', ascending=False),
+            sort_col = 'extensao_calculada_m' if 'extensao_calculada_m' in excedidos.columns else cols_disp[0] if cols_disp else None
+            st.dataframe(excedidos[cols_disp].sort_values(sort_col, ascending=False) if sort_col else excedidos[cols_disp],
                          use_container_width=True, height=300)
     else:
         st.info('Nenhum trecho de rede coletora encontrado.')
