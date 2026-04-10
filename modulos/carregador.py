@@ -13,13 +13,16 @@ import streamlit as st
 from modulos.parser_kml import consolidar_multiplos_kml
 from modulos.normalizador import normalizar_todos
 
+# Incrementar quando parser/normalizador mudar para invalidar cache
+_PARSER_VERSION = 2
+
 _BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 KML_DIR = os.path.join(_BASE_DIR, 'data', 'kml')
 ELEVACAO_CSV = os.path.join(_BASE_DIR, 'data', 'elevacao_cache.csv')
 
 
 @st.cache_data
-def _carregar_exemplos():
+def _carregar_exemplos(parser_version=_PARSER_VERSION):
     """Carrega os KMLs de exemplo do diretório data/kml."""
     arquivos = []
     nomes = []
@@ -35,12 +38,9 @@ def _carregar_exemplos():
 
 
 @st.cache_data
-def _processar_uploads(_arquivos_bytes, nomes, file_sizes=None):
-    """Processa KMLs enviados pelo usuário.
-
-    file_sizes é incluído (sem prefixo _) para invalidar cache quando o
-    conteúdo dos arquivos muda, já que _arquivos_bytes não é hasheado.
-    """
+def _processar_uploads(_arquivos_bytes, nomes, file_sizes=None,
+                       parser_version=_PARSER_VERSION):
+    """Processa KMLs enviados pelo usuário."""
     dados = consolidar_multiplos_kml(_arquivos_bytes, nomes)
     dados = normalizar_todos(dados)
     return dados
