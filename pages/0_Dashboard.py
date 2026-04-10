@@ -30,18 +30,47 @@ with st.expander('🔍 Debug — Informações do DataFrame', expanded=True):
             st.write(f'**{_ecm} dtype:** `{df_linear[_ecm].dtype}`')
             st.write(f'**{_ecm} primeiros 5:** `{df_linear[_ecm].head().tolist()}`')
             st.write(f'**{_ecm} NaN count:** {df_linear[_ecm].isna().sum()} / {len(df_linear)}')
-            st.write(f'**{_ecm} sum:** {df_linear[_ecm].sum()}')
-        else:
-            st.error(f'Coluna {_ecm} NAO existe no DataFrame!')
         if 'nm_mun' in df_linear.columns:
             st.write(f'**nm_mun sample:** `{df_linear["nm_mun"].head().tolist()}`')
-            st.write(f'**nm_mun NaN:** {df_linear["nm_mun"].isna().sum()} / {len(df_linear)}')
         if 'tipo' in df_linear.columns:
             st.write(f'**tipo unique:** `{df_linear["tipo"].unique().tolist()}`')
-        if 'material' in df_linear.columns:
-            st.write(f'**material sample:** `{df_linear["material"].head().tolist()}`')
-        st.write('**Primeiras 3 linhas (todas colunas):**')
-        st.dataframe(df_linear.head(3))
+
+    # Mostrar XML cru do primeiro placemark linear
+    try:
+        from lxml import etree
+        from modulos.parser_kml import carregar_kml, _localname
+        fonte = st.session_state.get('_fonte_dados', 'Arquivos de exemplo')
+        _arqs = st.session_state.get('_arquivos_upload')
+        if _arqs:
+            _kml_debug = _arqs[0]
+        else:
+            import os
+            _kml_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'data', 'kml')
+            _kml_files = sorted(f for f in os.listdir(_kml_dir) if f.endswith('.kml'))
+            _kml_debug = os.path.join(_kml_dir, _kml_files[0]) if _kml_files else None
+        if _kml_debug:
+            _tree = carregar_kml(_kml_debug)
+            _root = _tree.getroot()
+            _pm = None
+            for _f in _root.iter():
+                if _localname(_f.tag) == 'Folder':
+                    for _c in _f:
+                        if _localname(_c.tag) == 'name' and _c.text and 'linear' in _c.text:
+                            for _p in _f:
+                                if _localname(_p.tag) == 'Placemark':
+                                    _pm = _p
+                                    break
+                            break
+                if _pm is not None:
+                    break
+            if _pm is not None:
+                _xml_str = etree.tostring(_pm, encoding='unicode', pretty_print=True)
+                st.write('**XML do 1o Placemark linear (primeiros 1500 chars):**')
+                st.code(_xml_str[:1500], language='xml')
+            else:
+                st.warning('Placemark linear nao encontrado no KML')
+    except Exception as e:
+        st.error(f'Erro ao ler XML debug: {e}')
 
 # ── KPIs Principais ───────────────────────────────────────────────
 

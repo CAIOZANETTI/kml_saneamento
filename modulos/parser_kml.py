@@ -70,6 +70,7 @@ def _extrair_dados_placemark(placemark) -> dict:
     Suporta:
       - SchemaData/SimpleData (exportação padrão QGIS/ogr2ogr)
       - Data/value (Google Earth, ArcGIS)
+      - Valores em atributo 'value' (exportadores não-padrão)
     """
     dados = {}
 
@@ -78,7 +79,10 @@ def _extrair_dados_placemark(placemark) -> dict:
         tag = _localname(elem.tag)
         if tag == 'SimpleData':
             nome = elem.get('name')
+            # Tentar texto do elemento; fallback para atributo 'value'
             valor = (elem.text or '').strip()
+            if not valor:
+                valor = (elem.get('value') or '').strip()
             if nome:
                 dados[nome] = valor
 
@@ -88,10 +92,16 @@ def _extrair_dados_placemark(placemark) -> dict:
             tag = _localname(elem.tag)
             if tag == 'Data':
                 nome = elem.get('name')
+                valor = ''
                 for child in elem:
                     if _localname(child.tag) == 'value' and nome:
-                        dados[nome] = (child.text or '').strip()
+                        valor = (child.text or '').strip()
                         break
+                # Fallback: valor como atributo do Data
+                if not valor:
+                    valor = (elem.get('value') or '').strip()
+                if nome:
+                    dados[nome] = valor
 
     return dados
 
